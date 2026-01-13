@@ -1,0 +1,33 @@
+frontend/
+│── src/
+│   ├── components/
+│   │   ├── MapView.jsx
+│   │   ├── IssueModal.jsx
+│   │   ├── Navbar.jsx
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Admin.jsx
+│   ├── services/api.js
+│   ├── App.jsx
+│── tailwind.config.js
+
+backend/
+│── app/
+│   ├── main.py
+│   ├── database.py
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── issue.py
+│   ├── routes/
+│   │   ├── auth.py
+│   │   ├── issues.py
+│   │   ├── users.py
+│   │   ├── admin.py
+│   ├── utils/
+│   │   ├── jwt.py
+│   │   ├── gps.py
+│   │   ├── image_exif.py
+│   ├── dependencies.py
+│── uploads/
+│── requirements.txt
