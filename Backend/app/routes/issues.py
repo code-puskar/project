@@ -1,18 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.dependencies.auth import get_current_user
-from app.database import issues_collection
-from app.schemas.issue import IssueCreate
-from app.utils.distance import calculate_distance
 from bson import ObjectId
-from app.database import users_collection
 from datetime import datetime
+
+from app.dependencies.auth import get_current_user
+from app.database import issues_collection, users_collection
+from app.schemas.issue import IssueCreate
 from app.utils.constants import (
     ISSUE_VERIFY_COUNT,
     REPORTER_REWARD,
     VALIDATOR_REWARD
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/issues", tags=["Issues"])
+
+DUPLICATE_RADIUS_METERS = 100  # meters
+
+
+
+
 
 
 # ----------------------------
@@ -23,36 +28,44 @@ def create_issue(
     issue: IssueCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    distance = calculate_distance(
-        issue.user_latitude,
-        issue.user_longitude,
-        issue.latitude,
-        issue.longitude
-    )
+    existing_issue = issues_collection.find_one({
+        "status": "Active",
+        "location": {
+            "$near": {
+                "$geometry": {
+                    "type": "Point",
+                    "coordinates": [issue.longitude, issue.latitude]
+                },
+                "$maxDistance": DUPLICATE_RADIUS_METERS
+            }
+        }
+    })
 
-    if distance > 1000:
+    if existing_issue:
         raise HTTPException(
-            status_code=403,
-            detail="You must be within 1 km of the issue location to report it"
+            status_code=400,
+            detail="A similar issue already exists nearby"
         )
 
     issues_collection.insert_one({
         "issue_type": issue.issue_type,
         "description": issue.description,
-        "rating": issue.rating,
-        "status": "Active",
-        "user_id": current_user["user_id"],
         "location": {
             "type": "Point",
             "coordinates": [issue.longitude, issue.latitude]
         },
+        "status": "Active",
+        "user_id": current_user["user_id"],
+        "validations": 0,
+        "validated_by": [],
         "created_at": datetime.utcnow()
     })
 
-    return {
-        "message": "Issue created successfully",
-        "distance_meters": round(distance, 2)
-    }
+    return {"message": "Issue reported successfully"}
+
+
+
+
 
 
 # ----------------------------
@@ -60,21 +73,23 @@ def create_issue(
 # ----------------------------
 @router.get("/")
 def get_all_issues():
-    return list(issues_collection.find({}, {"_id": 0}))
+    return list(
+        issues_collection.find(
+            {"status": {"$in": ["Active", "Verified"]}},
+            {"_id": 0}
+        )
+    )
 
 
 # ----------------------------
 # Get Nearby Issues (THIS ONE)
 # ----------------------------
 @router.get("/nearby")
-def nearby_issues(
-    lat: float,
-    lng: float,
-    radius: int = 500
-):
+def nearby_issues(lat: float, lng: float, radius: int = 500):
     return list(
         issues_collection.find(
             {
+                "status": {"$in": ["Active", "Verified"]},
                 "location": {
                     "$near": {
                         "$geometry": {
@@ -88,6 +103,11 @@ def nearby_issues(
             {"_id": 0}
         )
     )
+
+
+
+
+
 # ----------------------------
 # Secure Test Endpoint  
 
@@ -97,6 +117,13 @@ def secure_test(current_user: dict = Depends(get_current_user)):
         "message": "You are authenticated",
         "user": current_user
     }
+
+
+
+
+
+
+
 # ----------------------------
 #ISSUE VALIDATION ENDPOINT
 # ----------------------------  
@@ -105,26 +132,31 @@ def validate_issue(
     issue_id: str,
     current_user: dict = Depends(get_current_user)
 ):
+    user_id = current_user["user_id"]
     issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
 
     if not issue:
         raise HTTPException(404, "Issue not found")
 
-    user_id = current_user["user_id"]
-
-    if user_id == issue["user_id"]:
+    if issue["user_id"] == user_id:
         raise HTTPException(400, "You cannot validate your own issue")
 
     if user_id in issue.get("validated_by", []):
         raise HTTPException(400, "You already validated this issue")
 
-    # Update issue
+    new_validation_count = issue["validations"] + 1
+
+    update_data = {
+        "$inc": {"validations": 1},
+        "$push": {"validated_by": user_id}
+    }
+
+    if new_validation_count >= ISSUE_VERIFY_COUNT:
+        update_data["$set"] = {"status": "Verified"}
+
     issues_collection.update_one(
         {"_id": ObjectId(issue_id)},
-        {
-            "$inc": {"validations": 1},
-            "$push": {"validated_by": user_id}
-        }
+        update_data
     )
 
     # Reward validator
@@ -133,22 +165,99 @@ def validate_issue(
         {"$inc": {"reputation": VALIDATOR_REWARD}}
     )
 
-    # Check verification threshold
-    updated_issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
-
-    if updated_issue["validations"] >= ISSUE_VERIFY_COUNT:
-        issues_collection.update_one(
-            {"_id": ObjectId(issue_id)},
-            {"$set": {"status": "Verified"}}
-        )
-
-        # Reward reporter
+    # Reward reporter only once (on verification)
+    if new_validation_count == ISSUE_VERIFY_COUNT:
         users_collection.update_one(
             {"_id": ObjectId(issue["user_id"])},
             {"$inc": {"reputation": REPORTER_REWARD}}
         )
-
         return {"message": "Issue verified 🎉"}
 
     return {"message": "Issue validated successfully"}
 
+
+
+
+
+
+
+
+# ----------------------------
+# ISSUE RESOLUTION ENDPOINT
+# ----------------------------
+@router.post("/{issue_id}/resolve")
+def resolve_issue(
+    issue_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
+
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+
+    # ❌ Only verified issues can be resolved
+    if issue["status"] != "Verified":
+        raise HTTPException(
+            400,
+            "Only verified issues can be resolved"
+        )
+
+    user_id = current_user["user_id"]
+    user_role = current_user.get("role")
+
+    # ❌ Only admin or reporter
+    if user_role != "admin" and issue["user_id"] != user_id:
+        raise HTTPException(
+            403,
+            "You are not allowed to resolve this issue"
+        )
+
+    issues_collection.update_one(
+        {"_id": ObjectId(issue_id)},
+        {
+            "$set": {
+                "status": "Resolved",
+                "resolved_at": datetime.utcnow(),
+                "resolved_by": user_id
+            }
+        }
+    )
+
+    return {"message": "Issue marked as resolved"}
+# ----------------------------  
+# Nearby Issues
+@router.get("/alerts/nearby")
+def nearby_alerts(
+    lat: float,
+    lng: float,
+    current_user: dict = Depends(get_current_user)
+):
+    alerts = list(
+        issues_collection.find(
+            {
+                "status": {"$in": ["Active", "Verified"]},
+                "location": {
+                    "$near": {
+                        "$geometry": {
+                            "type": "Point",
+                            "coordinates": [lng, lat]
+                        },
+                        "$maxDistance": 1000
+                    }
+                }
+            },
+            {
+                "_id": 0,
+                "issue_type": 1,
+                "description": 1,
+                "location": 1,
+                "status": 1
+            }
+        )
+    )
+
+    return {
+        "count": len(alerts),
+        "alerts": alerts
+    }
+# ----------------------------
