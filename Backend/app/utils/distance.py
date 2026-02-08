@@ -1,7 +1,7 @@
 import math
 
 def calculate_distance(lat1, lon1, lat2, lon2):
-    R = 6371000  # Earth radius in meters
+    R = 6371000  # meters
 
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)

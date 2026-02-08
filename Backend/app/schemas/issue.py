@@ -8,3 +8,6 @@ class IssueCreate(BaseModel):
     user_latitude: float # User current location
     user_longitude: float
     rating: int = Field(..., ge=1, le=5, example=4)
+from pydantic import BaseModel, Field
+
+
