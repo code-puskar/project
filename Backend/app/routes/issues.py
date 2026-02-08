@@ -5,6 +5,8 @@ from datetime import datetime
 from app.dependencies.auth import get_current_user
 from app.database import issues_collection, users_collection
 from app.schemas.issue import IssueCreate
+
+
 from app.utils.constants import (
     ISSUE_VERIFY_COUNT,
     REPORTER_REWARD,
@@ -73,12 +75,16 @@ def create_issue(
 # ----------------------------
 @router.get("/")
 def get_all_issues():
-    return list(
+    issues = list(
         issues_collection.find(
-            {"status": {"$in": ["Active", "Verified"]}},
-            {"_id": 0}
+            {"status": {"$in": ["Active", "Verified"]}}
         )
     )
+
+    for issue in issues:
+        issue["_id"] = str(issue["_id"])
+
+    return issues
 
 
 # ----------------------------
@@ -86,7 +92,7 @@ def get_all_issues():
 # ----------------------------
 @router.get("/nearby")
 def nearby_issues(lat: float, lng: float, radius: int = 500):
-    return list(
+    issues = list(
         issues_collection.find(
             {
                 "status": {"$in": ["Active", "Verified"]},
@@ -99,13 +105,14 @@ def nearby_issues(lat: float, lng: float, radius: int = 500):
                         "$maxDistance": radius
                     }
                 }
-            },
-            {"_id": 0}
+            }
         )
     )
 
+    for issue in issues:
+        issue["_id"] = str(issue["_id"])  # ✅ REQUIRED
 
-
+    return issues
 
 
 # ----------------------------
