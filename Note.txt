@@ -3,6 +3,9 @@ frontend/
 │   ├── components/
 │   │   ├── MapView.jsx
 │   │   ├── IssueModal.jsx
+│   │   ├── IssuePopup.jsx
+│   │   ├── MapClickHandler.jsx
+│   │   ├── StatusBadgeIcon.jsx
 │   │   ├── Navbar.jsx
 │   ├── pages/
 │   │   ├── Login.jsx
@@ -22,12 +25,221 @@ backend/
 │   ├── routes/
 │   │   ├── auth.py
 │   │   ├── issues.py
+│   │   ├── IssueImages.py
 │   │   ├── users.py
 │   │   ├── admin.py
 │   ├── utils/
 │   │   ├── jwt.py
 │   │   ├── gps.py
 │   │   ├── image_exif.py
-│   ├── dependencies.py
-│── uploads/
+│   ├── dependencies
+│   ├      ├── admin.py
+│   ├      ├── auth.py
+│   ├── schemas
+│   |      ├── issue.py
+│   ├── uploads
+│   |      ├── issues
+│   ├── utils
+│          ├── constants.py
+│          ├── distance.py
+│          ├── exif.py
+│          ├── geo.py
+│          ├── jwt.py
+│          ├── security.py
+│── database.py
+│── main.py
 │── requirements.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PHASE 2 — CORE MAP INTELLIGENCE (STARTING NOW)
+🔹 2.1 Live User Location Tracking
+
+Goal: User location updates every few seconds
+
+Use navigator.geolocation.watchPosition
+
+Store in frontend state only (for now)
+
+Marker updates smoothly
+
+📁 Affects:
+
+MapView.jsx
+
+🔹 2.2 Route Awareness (Travel Detection)
+
+Goal: If user is traveling, issues along route get detected
+
+Concept (important):
+
+User Location A → Location B
+↓
+Create a route polyline
+↓
+Check issues within X meters of route
+↓
+Notify user
+
+
+📁 Backend:
+
+utils/distance.py
+
+New helper: is_point_near_route()
+
+📁 Frontend:
+
+Draw route polyline (later)
+
+Fetch /issues/along-route
+
+⚠️ We will NOT do Google Directions API yet — open-source first.
+
+🔔 2.3 Smart Notifications (Nearby Issues)
+
+Goal: Notify when user comes near an issue
+
+Rules:
+
+Only notify once per issue
+
+Distance threshold (e.g. 200m)
+
+Do NOT spam
+
+📁 Frontend:
+
+MapView.jsx
+
+New: useNearbyIssues.js (later)
+
+🔍 PHASE 3 — SEARCH & NAVIGATION
+🔹 3.1 Location Search Bar
+
+Like Google Maps search.
+
+Options:
+
+OpenStreetMap Nominatim API (FREE)
+
+Search → lat/lng → pan map
+
+📁 Frontend:
+
+Navbar.jsx (Search input)
+
+MapView.jsx (map.flyTo)
+
+🔹 3.2 Issue Filters
+
+By type
+
+By status
+
+By distance
+
+📁 Frontend:
+
+Sidebar / Drawer UI
+
+Reuse StatusBadgeIcon.jsx
+
+👤 PHASE 4 — PROFILE & REPUTATION
+🔹 4.1 Profile Button
+
+Issues reported
+
+Issues validated
+
+Reputation score
+
+📁 Backend:
+
+/users/me
+
+reputation logic
+
+📁 Frontend:
+
+Navbar → Profile dropdown
+
+🔹 4.2 Reputation Logic
+
+Example:
+
++5 for valid issue
+
++1 for validation
+
+−10 for rejected/fake
+
+(This already matches your validate flow idea)
+
+🧾 PHASE 5 — ISSUE DRAWER (UX POLISH)
+
+Replace popup with side drawer:
+
+Images
+
+Validations
+
+Status
+
+Validate button (disabled for owner)
+
+📁 Frontend:
+
+Replace IssuePopup.jsx usage
+
+Drawer component
+
+🔥 IMPORTANT: HOW WE WILL WORK (NO CHAOS)
+
+✅ One feature at a time
+
+✅ I modify only required files
+
+✅ I explain why, not just what
+
+❌ No sudden refactors
+
+❌ No “trust me bro” code
+
+▶️ NEXT STEP (START NOW)
+
+We start PHASE 2.1:
+
+👉 Live location tracking (moving user marker)
+
+Reply with just:
+
+START PHASE 2.1
+
+
+I’ll then:
+
+Modify only MapView.jsx
+
+Add live tracking cleanly
+
+No UI break
+
+No auth issues
