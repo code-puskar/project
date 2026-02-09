@@ -1,4 +1,34 @@
 @import "tailwindcss";
+
+@theme {
+  --color-dark-900: #0b0f19;
+  --color-dark-800: #111827;
+  --color-dark-700: #1f2937;
+
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+
+  --font-sans: "Inter", sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  @apply bg-dark-900 text-gray-200;
+  background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 50%, #020617 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
 .leaflet-container {
   z-index: 0 !important;
 }

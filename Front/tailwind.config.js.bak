@@ -1,0 +1,31 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["*"],
+  theme: {
+    extend: {
+      colors: {
+        dark: {
+          900: "#0b0f19", // Main background
+          800: "#111827", // Secondary background (cards, etc)
+          700: "#1f2937", // Borders / Separators
+        },
+        brand: {
+          500: "#3b82f6", // Primary Blue
+          600: "#2563eb", // Hover Blue
+        },
+        accent: {
+          500: "#10b981", // Success Green
+          600: "#059669",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+      },
+    },
+  },
+  plugins: [],
+}
+
+
+
+
