@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
 import 'leaflet/dist/leaflet.css';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(

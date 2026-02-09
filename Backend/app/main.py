@@ -15,6 +15,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",  # React (Vite)
+        "http://localhost:5174",  # Vite (different dev port)
+        "http://localhost:5175",  # Vite (different dev port)
     ],
     allow_credentials=True,
     allow_methods=["*"],
