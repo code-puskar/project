@@ -1,3 +1,41 @@
+# PRESENTATION SCRIPT FOR PROFESSOR
+
+## Introduction
+"Good morning, Professor/Everyone. Today I am presenting my project, a 'Crowdsourced Smart City Issue Reporting System', designed to bridge the communication gap between citizens and municipal authorities."
+
+## Problem Statement
+"In many urban areas, civic issues like potholes, uncollected trash, or broken streetlights often go unreported because the reporting process is cumbersome or opaque. Citizens lack an easy way to flag problems, and authorities lack real-time visibility into these issues."
+
+## The Solution
+"My project solves this by providing an intuitive, map-based platform. Citizens can instantly report issues by dropping a pin on an interactive map, adding details, and tracking the status. Authorities get a centralized dashboard to view, validate, and resolve these reports efficiently."
+
+## Technical Architecture (The "How It Works")
+"The system is built as a full-stack web application leveraging modern technologies for performance and scalability:"
+
+1.  **Frontend (Client-Side):**
+    -   Built with **React and Vite** for a fast, responsive user interface.
+    -   Uses **Tailwind CSS** for a clean, modern design system.
+    -   Integrates **Mapbox GL and Deck.gl** for high-performance, interactive 3D mapping capabilities. This allows us to handle complex geospatial data visualization smoothly even with many data points.
+
+2.  **Backend (Server-Side):**
+    -   Powered by **FastAPI (Python)**. I chose FastAPI because it provides high performance (comparable to NodeJS) and automatic API documentation (Swagger UI).
+    -   It handles authentication (JWT), geoprocessing, and API routing.
+
+3.  **Database:**
+    -   We use **MongoDB**, a NoSQL database. This flexible schema is ideal for storing varied issue data and geospatial coordinates (GeoJSON), allowing for efficient spatial queries (e.g., 'find all issues within 500 meters').
+
+## Key Features
+-   **Interactive Map Interface:** Users can navigate a 3D map, view clustered issues, and filter by type (e.g., Road, Sanitation).
+-   **Real-Time Geolocation:** The app tracks the user's location to suggest nearby issues, enhancing the 'on-the-go' reporting experience.
+-   **Authentication & Security:** Secure user login and registration using JWT tokens to ensure data integrity.
+-   **Scalable Design:** The modular architecture (separate routes for users, issues, admin) allows for easy addition of future features like 'Gamification' (reputation scores) and 'Route Awareness' (alerting users of issues on their path).
+
+## Conclusion
+"In summary, this project is not just a reporting tool but a platform for civic engagement. It leverages the power of geospatial data and modern web frameworks to make city management smarter and more participatory."
+
+---
+# ORIGINAL PROJECT NOTES & STRUCTURE
+
 frontend/
 │── src/
 │   ├── components/
@@ -49,24 +87,6 @@ backend/
 │── database.py
 │── main.py
 │── requirements.txt
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 PHASE 2 — CORE MAP INTELLIGENCE (STARTING NOW)
@@ -341,6 +361,3 @@ Workflow:
 6. Route planning uses Mapbox API to calculate and display routes
 7. Component cleans up geolocation on unmount
 */
-
-
-
