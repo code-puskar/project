@@ -7,6 +7,8 @@ import api from "./services/api";
 import "leaflet/dist/leaflet.css";
 import Navbar from "./components/Navbar";
 
+import IssueDrawer from "./components/IssueDrawer";
+
 function App() {
   const [searchLocation, setSearchLocation] = useState(null);
   const [issueFilter, setIssueFilter] = useState("");
@@ -15,10 +17,13 @@ function App() {
 
   const [token, setToken] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState(null); // Keep track of user for isOwner check
 
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
+
+  const [selectedIssue, setSelectedIssue] = useState(null); // For Drawer
 
   const [pendingLocation, setPendingLocation] = useState(null);
   const [issues, setIssues] = useState([]);
@@ -26,9 +31,14 @@ function App() {
   // 🔑 Auth hydration
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token");
+    // Also try to load user from local storage or decode token if possible, 
+    // but better to fetch /me or relies on Dashboard to fetch. 
+    // Actually we need currentUserId for IssueDrawer.
+    // Let's decode or fetch. For simplicity, let's fetch profile if token exists.
 
     if (storedToken) {
       setToken(storedToken);
+      fetchProfile(storedToken);
       setShowLogin(false);
     } else {
       setShowLogin(true);
@@ -36,6 +46,17 @@ function App() {
 
     setAuthReady(true);
   }, []);
+
+  const fetchProfile = async (t) => {
+    try {
+      // We can use the api service, but need to ensure it uses the token.
+      // The api service likely uses localStorage token.
+      const res = await api.get("/users/me");
+      setUser(res.data);
+    } catch (e) {
+      console.error("Failed to fetch profile in App", e);
+    }
+  };
 
   if (!authReady) return null;
 
@@ -47,6 +68,9 @@ function App() {
       return;
     }
 
+    // Close drawer if open
+    setSelectedIssue(null);
+
     setPendingLocation(latlng);
     setShowIssueModal(true);
   };
@@ -55,6 +79,7 @@ function App() {
   const handleLoginSuccess = (newToken) => {
     localStorage.setItem("access_token", newToken);
     setToken(newToken);
+    fetchProfile(newToken);
     setShowLogin(false);
 
     if (pendingLocation) {
@@ -68,13 +93,20 @@ function App() {
       await api.post("/issues/", issue);
       setShowIssueModal(false);
       setPendingLocation(null);
-      const res = await api.get("/issues/");
-      setIssues(res.data);
+      refreshIssues();
     } catch (err) {
       console.error("Failed to submit issue", err);
-      // surface useful validation errors to the user
       const serverDetail = err.response?.data?.detail || err.response?.data || err.message;
       alert("Could not submit issue: " + JSON.stringify(serverDetail));
+    }
+  };
+
+  const refreshIssues = async () => {
+    try {
+      const res = await api.get("/issues/");
+      setIssues(res.data);
+    } catch (e) {
+      console.error("Failed to refresh issues", e);
     }
   };
 
@@ -104,6 +136,7 @@ function App() {
           issues={issues}
           setIssues={setIssues}
           onRequireLogin={() => setShowLogin(true)}
+          onIssueSelect={(issue) => setSelectedIssue(issue)}
         />
       )}
 
@@ -145,6 +178,14 @@ function App() {
           onSubmit={handleIssueSubmit}
         />
       )}
+
+      {/* 📂 ISSUE DRAWER */}
+      <IssueDrawer
+        issue={selectedIssue}
+        onClose={() => setSelectedIssue(null)}
+        currentUserId={user?.id}
+        onValidationSuccess={refreshIssues}
+      />
     </div>
   );
 }

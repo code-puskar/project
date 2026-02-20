@@ -13,6 +13,7 @@ export default function MapView({
   onStyleChange,
   show3D,
   onToggle3D,
+  onIssueSelect,
 }) {
   const [position, setPosition] = useState(null);
   const watchIdRef = useRef(null);
@@ -286,8 +287,10 @@ export default function MapView({
             if (!onMapClick) return;
             onMapClick(latlng);
           }}
-          onIssueClick={(issueId) => {
-            handleValidate(issueId);
+          onIssueClick={(issue) => {
+            if (typeof onIssueSelect === "function") {
+              onIssueSelect(issue);
+            }
           }}
         />
       </div>

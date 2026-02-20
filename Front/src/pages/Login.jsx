@@ -1,10 +1,38 @@
 import axios from "axios";
 import { useState } from "react";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
 function Login({ onSuccess, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Motion values for 3D tilt effect
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["7.5deg", "-7.5deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-7.5deg", "7.5deg"]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,15 +57,34 @@ function Login({ onSuccess, onSwitchToRegister }) {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-radial-gradient from-dark-800 to-dark-900 p-4 text-white">
-      <div className="relative w-full max-w-[420px]">
+    <div className="min-h-screen w-full flex items-center justify-center bg-radial-gradient from-dark-800 to-dark-900 p-4 text-white perspective-1000">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative w-full max-w-[420px]"
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         {/* Background Blur Effect */}
         <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-accent-600 rounded-3xl blur opacity-20 transition duration-1000 group-hover:opacity-100"></div>
 
-        <div className="relative bg-dark-900/90 backdrop-blur-xl p-8 rounded-[24px] shadow-2xl border border-white/5 ring-1 ring-white/10">
+        <div className="relative bg-dark-900/90 backdrop-blur-xl p-8 rounded-[24px] shadow-2xl border border-white/5 ring-1 ring-white/10"
+          style={{ transform: "translateZ(20px)" }}
+        >
 
           {/* Header Icon */}
-          <div className="flex justify-center mb-8">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex justify-center mb-8"
+          >
             <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center border border-brand-500/20 shadow-inner">
               <svg
                 width="32"
@@ -55,21 +102,36 @@ function Login({ onSuccess, onSwitchToRegister }) {
                 <line x1="15" y1="12" x2="3" y2="12" />
               </svg>
             </div>
-          </div>
+          </motion.div>
 
           {/* Title & Subtitle */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-3xl font-bold text-white mb-2 tracking-tight"
+            >
               Welcome back
-            </h2>
-            <p className="text-sm text-gray-400 px-4 leading-relaxed">
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-sm text-gray-400 px-4 leading-relaxed"
+            >
               Sign in to access the dashboard and report issues.
-            </p>
+            </motion.p>
           </div>
 
           {/* Inputs */}
           <div className="space-y-4 mb-6">
-            <div className="relative group">
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="relative group"
+            >
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-500 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -81,9 +143,14 @@ function Login({ onSuccess, onSwitchToRegister }) {
                 onChange={(e) => setEmail(e.target.value)}
                 className="block w-full pl-11 pr-4 py-3.5 bg-dark-800/50 border border-white/10 focus:border-brand-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
               />
-            </div>
+            </motion.div>
 
-            <div className="relative group">
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="relative group"
+            >
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-500 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -97,7 +164,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 className="block w-full pl-11 pr-10 py-3.5 bg-dark-800/50 border border-white/10 focus:border-brand-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
               />
-            </div>
+            </motion.div>
           </div>
 
           <div className="flex justify-end mb-6">
@@ -106,10 +173,12 @@ function Login({ onSuccess, onSwitchToRegister }) {
             </button>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed mb-8 transform active:scale-[0.98]"
+            className="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed mb-8"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -120,7 +189,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
                 Logging in...
               </span>
             ) : "Sign in"}
-          </button>
+          </motion.button>
 
           <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
@@ -131,7 +200,12 @@ function Login({ onSuccess, onSwitchToRegister }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="grid grid-cols-3 gap-4"
+          >
             <button className="flex items-center justify-center py-2.5 border border-white/10 bg-white/5 rounded-xl hover:bg-white/10 transition-colors shadow-sm active:scale-95">
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -152,7 +226,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74s1.75-.74 3.23-.74c.93 0 1.95.34 2.65.78-2.28 1.35-1.93 5.39.46 6.33-.48 1.48-1.07 3.01-1.42 3.86zM12.05 5c.16-2.29 2.15-4 4.14-4 .34 2.58-2.34 4.41-4.14 4z" />
               </svg>
             </button>
-          </div>
+          </motion.div>
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-400">
@@ -167,7 +241,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
           </div>
 
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
