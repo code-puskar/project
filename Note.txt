@@ -352,6 +352,7 @@ This code implements a map-based interface for reporting and viewing issues. It 
     - Uses refs to prevent unnecessary re-renders
     - Conditional rendering to optimize updates
 
+
 Workflow:
 1. Component mounts and initializes state
 2. Geolocation starts tracking user position

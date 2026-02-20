@@ -45,9 +45,11 @@ def get_current_user(
         )
 
     # ✅ Return user info (or payload if you want lightweight)
-    return{
-    "user_id": str(user["_id"]),
-    "email": user["email"],
-    "role": user.get("role", "user")
-}
+    return {
+        "user_id": str(user["_id"]),
+        "email": user["email"],
+        "name": user.get("name", "Unknown"),
+        "role": user.get("role", "user"),
+        "reputation": user.get("reputation", 0)
+    }
 

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import api from "../services/api";
 
 export default function Navbar({
   onSearchLocation,
@@ -9,8 +10,38 @@ export default function Navbar({
   onToggle3D,
 }) {
   const [query, setQuery] = useState("");
+  const [user, setUser] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const dropdownRef = useRef(null);
 
   const mapboxToken = "pk.eyJ1IjoidGhlZXF1aW5veGRldiIsImEiOiJjbWs1NXJpbG0wYXRkM2dxc2M4MWhoaDR2In0.aN-rLyueziuW3wJhQB2suw";
+
+  useEffect(() => {
+    fetchProfile();
+
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/users/me");
+      setUser(res.data);
+    } catch (err) {
+      console.error("Failed to fetch profile", err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    window.location.reload();
+  };
 
   const handleSearch = async () => {
     if (!query) return;
@@ -139,6 +170,70 @@ export default function Navbar({
               `}
             />
           </button>
+
+          <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+            >
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-accent-500 p-[1px]">
+                <div className="w-full h-full rounded-lg bg-dark-900 flex items-center justify-center text-xs font-bold text-white">
+                  {user?.name?.[0] || "U"}
+                </div>
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-xs font-medium text-white leading-none">{user?.name || "User"}</p>
+                <p className="text-[10px] text-brand-400 mt-0.5 font-medium">{user?.reputation || 0} Rep</p>
+              </div>
+              <svg className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-2 w-60 rounded-xl bg-dark-900 border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                <div className="p-4 bg-dark-800/50 border-b border-white/5">
+                  <p className="text-sm font-medium text-white">{user?.name}</p>
+                  <p className="text-xs text-gray-400">{user?.email}</p>
+                </div>
+
+                <div className="p-2 space-y-1">
+                  <div className="px-3 py-2 rounded-lg bg-white/5 mx-2 my-1">
+                    <div className="flex justify-between items-center text-sm text-gray-300">
+                      <span>Reputation</span>
+                      <span className="font-bold text-brand-400">{user?.reputation || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 px-2 pb-2">
+                    <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
+                      <span className="block text-xs text-gray-500 uppercase tracking-tighter">Reported</span>
+                      <span className="block text-lg font-bold text-white">{user?.stats?.reported || 0}</span>
+                    </div>
+                    <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
+                      <span className="block text-xs text-gray-500 uppercase tracking-tighter">Validated</span>
+                      <span className="block text-lg font-bold text-white">{user?.stats?.validated || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-1 border-t border-white/5">
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

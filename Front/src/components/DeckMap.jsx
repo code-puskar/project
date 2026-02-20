@@ -152,11 +152,9 @@ export default function DeckMap({
       getFillColor: (d) => isDarkMode ? [255, 255, 255] : getMarkerColor(d), // White core in dark mode for neon center
       onClick: (info) => {
         if (info && info.object) {
-          setSelectedInfo({
-            x: info.x,
-            y: info.y,
-            object: info.object,
-          });
+          if (typeof onIssueClick === "function") {
+            onIssueClick(info.object);
+          }
         }
       },
       onHover: (info) => {
@@ -227,12 +225,12 @@ export default function DeckMap({
         }}
         layers={layers}
         onClick={(info) => {
+          // If we clicked blank space (not an object), trigger map click
           if (!info || !info.object) {
             const coord = info && info.coordinate;
             if (coord && typeof onMapClick === "function") {
               onMapClick({ lat: coord[1], lng: coord[0] });
             }
-            setSelectedInfo(null);
           }
         }}
       >
@@ -306,52 +304,6 @@ export default function DeckMap({
           </div>
         )}
 
-        {selectedInfo && selectedInfo.object && (
-          <div
-            style={{
-              position: "absolute",
-              left: selectedInfo.x + 12,
-              top: selectedInfo.y + 12,
-              background: "white",
-              padding: 10,
-              borderRadius: 8,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              zIndex: 1000,
-              minWidth: 180,
-            }}
-            onClick={(e) => {
-              // Prevent click from closing the popup or triggering map click
-              e.stopPropagation();
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{selectedInfo.object.issue_type}</div>
-            <div style={{ fontSize: 12, color: "#333", marginBottom: 6 }}>{selectedInfo.object.description}</div>
-            <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
-              Status: {selectedInfo.object.status} • Validations: {selectedInfo.object.validations || 0}
-            </div>
-            {selectedInfo.object.status === "Active" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (typeof onIssueClick === "function") onIssueClick(selectedInfo.object._id);
-                }}
-                disabled={selectedInfo.object.user_id === currentUserId}
-                style={{
-                  width: "100%",
-                  background: selectedInfo.object.user_id === currentUserId ? "#9ca3af" : "#16a34a",
-                  color: "white",
-                  borderRadius: 6,
-                  padding: "6px 8px",
-                  fontSize: 12,
-                  cursor: selectedInfo.object.user_id === currentUserId ? "default" : "pointer",
-                  border: "none",
-                }}
-              >
-                {selectedInfo.object.user_id === currentUserId ? "Your Issue" : "Validate Issue"}
-              </button>
-            )}
-          </div>
-        )}
       </DeckGL>
     </div>
   );

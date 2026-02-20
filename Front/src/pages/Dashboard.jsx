@@ -11,6 +11,7 @@ export default function Dashboard({
   show3D,
   onStyleChange,
   onToggle3D,
+  onIssueSelect,
 }) {
   return (
     <MapView
@@ -24,6 +25,7 @@ export default function Dashboard({
       show3D={show3D}
       onStyleChange={onStyleChange}
       onToggle3D={onToggle3D}
+      onIssueSelect={onIssueSelect}
     />
   );
 }
