@@ -13,8 +13,8 @@ export default function Navbar({
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const dropdownRef = useRef(null);
-
-  const mapboxToken = "pk.eyJ1IjoidGhlZXF1aW5veGRldiIsImEiOiJjbWs1NXJpbG0wYXRkM2dxc2M4MWhoaDR2In0.aN-rLyueziuW3wJhQB2suw";
+const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
+ 
 
   useEffect(() => {
     fetchProfile();
