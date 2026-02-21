@@ -18,7 +18,7 @@ export default function MapView({
   const [position, setPosition] = useState(null);
   const watchIdRef = useRef(null);
   const [showIssues, setShowIssues] = useState(true);
-  const mapboxToken = "pk.eyJ1IjoidGhlZXF1aW5veGRldiIsImEiOiJjbWs1NXJpbG0wYXRkM2dxc2M4MWhoaDR2In0.aN-rLyueziuW3wJhQB2suw";
+ const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
   const [centerRequest, setCenterRequest] = useState(null);
 
   // Directions state
