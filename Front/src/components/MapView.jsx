@@ -18,7 +18,7 @@ export default function MapView({
   const [position, setPosition] = useState(null);
   const watchIdRef = useRef(null);
   const [showIssues, setShowIssues] = useState(true);
- const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
   const [centerRequest, setCenterRequest] = useState(null);
 
   // Directions state
@@ -278,6 +278,11 @@ export default function MapView({
                 addNotification(`You can only report issues within 300m of your location. (Distance: ${Math.round(dist)}m)`);
                 return;
               }
+            }
+
+            if (Object.hasOwn(latlng, "isRoad") && !latlng.isRoad) {
+              addNotification("You can only report issues on a road.");
+              return;
             }
 
             if (!token) {

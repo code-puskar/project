@@ -31,6 +31,7 @@ export default function DeckMap({
   const initialFlyRef = useRef(false);
   const [tooltip, setTooltip] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (!position) return;
@@ -229,12 +230,34 @@ export default function DeckMap({
           if (!info || !info.object) {
             const coord = info && info.coordinate;
             if (coord && typeof onMapClick === "function") {
-              onMapClick({ lat: coord[1], lng: coord[0] });
+              let isRoad = false;
+              if (mapRef.current) {
+                try {
+                  const map = mapRef.current.getMap();
+                  const features = map.queryRenderedFeatures([info.x, info.y]);
+
+                  // Check if any feature belongs to a road layer
+                  isRoad = features.some(f =>
+                    (f.layer.id && f.layer.id.toLowerCase().includes('road')) ||
+                    (f.sourceLayer && f.sourceLayer.toLowerCase().includes('road')) ||
+                    (f.layer.id && f.layer.id.toLowerCase().includes('street')) ||
+                    (f.sourceLayer && f.sourceLayer.toLowerCase().includes('street')) ||
+                    (f.layer.id && f.layer.id.toLowerCase().includes('bridge')) ||
+                    (f.layer.id && f.layer.id.toLowerCase().includes('tunnel'))
+                  );
+                } catch (err) {
+                  console.error("Failed to query rendered features:", err);
+                  isRoad = true; // Fallback to true if we can't determine
+                }
+              }
+
+              onMapClick({ lat: coord[1], lng: coord[0], isRoad });
             }
           }
         }}
       >
         <Map
+          ref={mapRef}
           reuseMaps
           mapLib={mapboxgl}
           mapStyle={`mapbox://styles/mapbox/${mapStyleId}`}
