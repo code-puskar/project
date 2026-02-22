@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export default function Hero() {
+export default function Hero({ onOpenLogin, onOpenRegister }) {
     return (
         <section className="relative min-h-[90vh] w-full bg-[#110e1b] flex flex-col items-center pt-32 pb-20 px-4 overflow-hidden">
 
