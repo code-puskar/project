@@ -6,7 +6,16 @@ import { motion } from "framer-motion";
 
 const StarParticles = (props) => {
     const ref = useRef();
-    const [sphere] = useState(() => random.inSphere(new Float32Array(5000), { radius: 1.5 }));
+
+    // Safely generate points without NaN values
+    const [sphere] = useState(() => {
+        const rawPoints = random.inSphere(new Float32Array(5000), { radius: 1.5 });
+        // Ensure no NaNs are passed to Three.js BufferGeometry
+        for (let i = 0; i < rawPoints.length; i++) {
+            if (isNaN(rawPoints[i])) rawPoints[i] = 0;
+        }
+        return rawPoints;
+    });
 
     useFrame((state, delta) => {
         if (ref.current) {
