@@ -15,7 +15,7 @@ app = FastAPI()
 # Important because frontend and backend run on different ports during development
 
 allowed_origins = [
-    "https://safexcity.vercel.app/"
+    "https://safexcity.vercel.app",
     "http://localhost:5173",  # React (Vite)
     "http://localhost:5174",  # Vite (different dev port)
     "http://localhost:5175",  # Vite (different dev port)
@@ -23,7 +23,7 @@ allowed_origins = [
 
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    allowed_origins.append(frontend_url)
+    allowed_origins.append(frontend_url.rstrip("/"))
 
 app.add_middleware(
     CORSMiddleware,
