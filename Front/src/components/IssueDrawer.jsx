@@ -117,7 +117,7 @@ export default function IssueDrawer({ issue, onClose, onValidationSuccess, curre
                                         {issue.images.map((img, i) => (
                                             <img
                                                 key={i}
-                                                src={`http://localhost:8000/uploads/issues/${img}`}
+                                                src={`https://safexcity.onrender.com/uploads/issues/${img}`}
                                                 className="rounded-xl border border-white/10 w-full h-32 object-cover hover:opacity-90 transition-opacity cursor-zoom-in"
                                             />
                                         ))}
