@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../services/api";
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
