@@ -10,4 +10,7 @@ export default defineConfig({
       "mapbox-gl": "mapbox-gl/dist/mapbox-gl.js",
     },
   },
+  optimizeDeps: {
+    exclude: ['@luma.gl/webgl']
+  }
 })
