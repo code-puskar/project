@@ -43,7 +43,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
     try {
       setLoading(true);
 
-      const res = await axios.post("http://localhost:8000/auth/login", {
+      const res = await api.post("/auth/login", {
         email,
         password,
       });

@@ -14,7 +14,7 @@ export default function IssuePopup({ issue }) {
           {issue.images.map((img, i) => (
             <img
               key={i}
-              src={`http://localhost:8000/uploads/issues/${img}`}
+              src={`https://safexcity.onrender.com/uploads/issues/${img}`}
               className="rounded border"
             />
           ))}
