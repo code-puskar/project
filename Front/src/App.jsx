@@ -8,6 +8,7 @@ import "leaflet/dist/leaflet.css";
 import Navbar from "./components/Navbar";
 
 import IssueDrawer from "./components/IssueDrawer";
+import Landing from "./pages/Landing";
 
 function App() {
   const [searchLocation, setSearchLocation] = useState(null);
@@ -19,6 +20,7 @@ function App() {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState(null); // Keep track of user for isOwner check
 
+  const [showLanding, setShowLanding] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -30,31 +32,43 @@ function App() {
 
   // 🔑 Auth hydration
   useEffect(() => {
+    // Check hash for #dashboard to skip landing page immediately if previously entered
+    if (window.location.hash === "#dashboard") {
+      setShowLanding(false);
+    }
+
+    const handleHashChange = () => {
+      if (window.location.hash === "#dashboard") {
+        setShowLanding(false);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+
     const storedToken = localStorage.getItem("access_token");
-    // Also try to load user from local storage or decode token if possible, 
-    // but better to fetch /me or relies on Dashboard to fetch. 
-    // Actually we need currentUserId for IssueDrawer.
-    // Let's decode or fetch. For simplicity, let's fetch profile if token exists.
 
     if (storedToken) {
       setToken(storedToken);
       fetchProfile(storedToken);
       setShowLogin(false);
+      // If user is already logged in, we can optionally skip landing, but we will respect the hash for now.
     } else {
-      setShowLogin(true);
+      // Don't show login immediately if they are on the landing page
     }
 
     setAuthReady(true);
+
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   const fetchProfile = async (t) => {
     try {
-      // We can use the api service, but need to ensure it uses the token.
-      // The api service likely uses localStorage token.
       const res = await api.get("/users/me");
       setUser(res.data);
     } catch (e) {
       console.error("Failed to fetch profile in App", e);
+      // If token is invalid/expired, clear it
+      localStorage.removeItem("access_token");
+      setToken(null);
     }
   };
 
@@ -81,6 +95,9 @@ function App() {
     setToken(newToken);
     fetchProfile(newToken);
     setShowLogin(false);
+
+    // Automatically hide landing and show dashboard upon login
+    setShowLanding(false);
 
     if (pendingLocation) {
       setShowIssueModal(true);
@@ -110,6 +127,43 @@ function App() {
     }
   };
 
+  // Render Landing Page if showLanding is true
+  if (showLanding) {
+    return (
+      <>
+        <Landing />
+
+        {/* We can still render the login/register modals over the landing page if triggered */}
+        {showLogin && (
+          <div className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center pointer-events-auto">
+            <Login
+              onSuccess={handleLoginSuccess}
+              onClose={() => setShowLogin(false)}
+              onSwitchToRegister={() => {
+                setShowLogin(false);
+                setShowRegister(true);
+              }}
+            />
+          </div>
+        )}
+
+        {showRegister && (
+          <div className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center pointer-events-auto">
+            <Register
+              onSuccess={handleLoginSuccess}
+              onClose={() => setShowRegister(false)}
+              onSwitchToLogin={() => {
+                setShowRegister(false);
+                setShowLogin(true);
+              }}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Otherwise render the main Dashboard App
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       <Navbar
