@@ -7,17 +7,26 @@ from app.routes import issue_images
 
 
 
+import os
+
 app = FastAPI() 
 # Allow CORS for frontend development server
 # Adjust origins as needed for production
 # Important because frontend and backend run on different ports during development
+
+allowed_origins = [
+    "http://localhost:5173",  # React (Vite)
+    "http://localhost:5174",  # Vite (different dev port)
+    "http://localhost:5175",  # Vite (different dev port)
+]
+
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # React (Vite)
-        "http://localhost:5174",  # Vite (different dev port)
-        "http://localhost:5175",  # Vite (different dev port)
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
