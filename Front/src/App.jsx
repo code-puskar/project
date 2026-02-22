@@ -131,7 +131,10 @@ function App() {
   if (showLanding) {
     return (
       <>
-        <Landing />
+        <Landing
+          onOpenLogin={() => setShowLogin(true)}
+          onOpenRegister={() => setShowRegister(true)}
+        />
 
         {/* We can still render the login/register modals over the landing page if triggered */}
         {showLogin && (

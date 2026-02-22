@@ -27,11 +27,11 @@ export default function Hero() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <a href="#login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Login</a>
-                    <a href="#register" className="text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+                    <button onClick={(e) => { e.preventDefault(); onOpenLogin(); }} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Login</button>
+                    <button onClick={(e) => { e.preventDefault(); onOpenRegister(); }} className="text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2">
                         Get Started
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                    </a>
+                    </button>
                 </div>
             </nav>
 
@@ -80,10 +80,10 @@ export default function Hero() {
                     transition={{ duration: 0.6, delay: 0.3 }}
                     className="flex flex-col sm:flex-row gap-4"
                 >
-                    <a href="#features" className="px-8 py-4 rounded-xl font-bold bg-white text-[#110e1b] hover:bg-slate-200 transition-colors shadow-lg">
+                    <button onClick={(e) => { e.preventDefault(); onOpenRegister(); }} className="px-8 py-4 rounded-xl font-bold bg-white text-[#110e1b] hover:bg-slate-200 transition-colors shadow-lg">
                         Explore Features
-                    </a>
-                    <a href="#demo" className="px-8 py-4 rounded-xl font-bold bg-[#1a1625] text-white border border-white/10 hover:bg-[#251e35] transition-colors flex items-center justify-center gap-2">
+                    </button>
+                    <a href="#features" className="px-8 py-4 rounded-xl font-bold bg-[#1a1625] text-white border border-white/10 hover:bg-[#251e35] transition-colors flex items-center justify-center gap-2">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 3 19 12 5 21 5 3" />
                         </svg>
