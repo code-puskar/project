@@ -260,6 +260,18 @@ export default function DeckMap({
                     const sourceLayer = f.sourceLayer?.toLowerCase() || "";
                     return roadKeywords.some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
                   });
+
+                  // Fix for Mapbox Standard style: traditional road layers are obfuscated by the 3D pipeline.
+                  // For the 'standard' style, we switch to a blacklist approach: allow marking anywhere 
+                  // *except* explicitly on buildings, water bodies, or major POIs.
+                  if (mapStyleId === 'standard') {
+                    const isBuildingOrWater = features.some(f => {
+                      const layerId = f.layer?.id?.toLowerCase() || "";
+                      const sourceLayer = f.sourceLayer?.toLowerCase() || "";
+                      return ['water', 'building', 'structure', 'poi'].some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
+                    });
+                    isRoad = !isBuildingOrWater;
+                  }
                 } catch (err) {
                   console.error("Failed to query rendered features:", err);
                   isRoad = true; // Fallback to true if we can't determine
