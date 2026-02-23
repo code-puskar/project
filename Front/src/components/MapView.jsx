@@ -351,7 +351,7 @@ export default function MapView({
       </div>
 
       {/* ⚪ Mobile Bottom Sheet (Filters) */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[32px] pt-3 pb-8 md:pb-6 px-2 flex flex-col z-[48] transition-transform duration-300">
+      <div className="absolute md:hidden bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[32px] pt-3 pb-8 md:pb-6 px-2 flex flex-col z-[48] transition-transform duration-300">
         {/* Grab Handle */}
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
 
