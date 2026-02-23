@@ -116,6 +116,7 @@ export default function DeckMap({
   }, [data]);
 
   const isDarkMode = mapStyleId.includes('dark') || mapStyleId.includes('satellite');
+  const isStandard = mapStyleId === 'standard';
   // 1. Make markers small (neon ball core)
   const coreMarkerSize = Math.max(3, Math.min(8, viewState.zoom * 0.4));
   // 2. Glow size relative to core
@@ -272,9 +273,9 @@ export default function DeckMap({
           mapStyle={`mapbox://styles/mapbox/${mapStyleId}`}
           mapboxAccessToken={mapboxToken}
           style={{ width: "100%", height: "100%" }}
-          terrain={show3D && !isMobile ? { source: 'mapbox-dem', exaggeration: 1.5 } : undefined}
+          terrain={show3D && !isMobile && !isStandard ? { source: 'mapbox-dem', exaggeration: 1.5 } : undefined}
         >
-          {show3D && !isMobile && (
+          {show3D && !isMobile && !isStandard && (
             <>
               <Source
                 id="mapbox-dem"

@@ -13,7 +13,7 @@ import Landing from "./pages/Landing";
 function App() {
   const [searchLocation, setSearchLocation] = useState(null);
   const [issueFilter, setIssueFilter] = useState("");
-  const [mapStyleId, setMapStyleId] = useState("streets-v12");
+  const [mapStyleId, setMapStyleId] = useState("standard");
   const [show3D, setShow3D] = useState(false);
 
   const [token, setToken] = useState(null);

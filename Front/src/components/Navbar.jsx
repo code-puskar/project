@@ -13,8 +13,8 @@ export default function Navbar({
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const dropdownRef = useRef(null);
-const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
- 
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
+
 
   useEffect(() => {
     fetchProfile();
@@ -148,6 +148,7 @@ const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
             onChange={(e) => onStyleChange(e.target.value)}
             className="bg-transparent text-sm font-medium text-gray-300 hover:text-white focus:outline-none cursor-pointer max-w-[100px]"
           >
+            <option value="standard" className="bg-dark-800 text-gray-300">Standard</option>
             <option value="streets-v12" className="bg-dark-800 text-gray-300">Streets</option>
             <option value="outdoors-v12" className="bg-dark-800 text-gray-300">Outdoors</option>
             <option value="light-v11" className="bg-dark-800 text-gray-300">Light</option>
