@@ -7,6 +7,7 @@ export default function Dashboard({
   onRequireLogin,
   searchLocation,
   issueFilter,
+  setIssueFilter,
   mapStyleId,
   show3D,
   onStyleChange,
@@ -21,6 +22,7 @@ export default function Dashboard({
       onRequireLogin={onRequireLogin}
       searchLocation={searchLocation}
       issueFilter={issueFilter}
+      setIssueFilter={setIssueFilter}
       mapStyleId={mapStyleId}
       show3D={show3D}
       onStyleChange={onStyleChange}

@@ -9,6 +9,7 @@ export default function MapView({
   onRequireLogin,
   searchLocation,
   issueFilter,
+  setIssueFilter,
   mapStyleId,
   onStyleChange,
   show3D,
@@ -247,11 +248,16 @@ export default function MapView({
   if (!position) return <p>Locating you...</p>;
 
   return (
-    <div className="relative z-0 h-screen">
+    <div className="relative z-0 h-screen w-full overflow-hidden bg-gray-100">
       {notifications.length > 0 && (
-        <div className="fixed top-16 right-4 z-50 space-y-2">
+        <div className="fixed top-20 left-4 right-4 md:left-auto md:right-4 z-50 flex flex-col gap-2 pointer-events-none">
           {notifications.map((n) => (
-            <div key={n.id} className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-3 py-2 rounded shadow">
+            <div key={n.id} className="bg-[#FFF9E6] border border-[#FFE499] text-[#805B00] px-4 py-3 rounded-2xl shadow-lg shadow-yellow-500/10 flex items-center gap-3 backdrop-blur-md font-medium text-sm animate-in slide-in-from-top-4 fade-in duration-300 pointer-events-auto">
+              <div className="bg-[#FFEDAE] p-1.5 rounded-lg text-[#996D00]">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
               {n.message}
             </div>
           ))}
@@ -300,34 +306,19 @@ export default function MapView({
         />
       </div>
 
-      {/* 🧭 Unified Bottom-Left Control Dock */}
-      <div className="absolute bottom-8 left-4 z-50 flex items-center gap-3">
-        {/* Directions Toggle */}
+      {/* 🧭 Vertical Right Control Stack */}
+      <div className="absolute bottom-[100px] md:bottom-8 right-4 md:left-4 md:right-auto z-[45] flex flex-col md:flex-row items-center gap-3 w-12 md:w-auto">
+        {/* Map Style / Directions Toggle */}
         <button
           onClick={() => setRouteOpen((v) => !v)}
-          className={`h-12 w-12 flex items-center justify-center rounded-2xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${routeOpen
-            ? "bg-brand-600 border-brand-400 text-white shadow-brand-500/30"
-            : "bg-dark-900/80 border-white/10 text-gray-200 hover:bg-dark-800 hover:text-white"
+          className={`h-12 w-12 flex items-center justify-center rounded-full md:rounded-2xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${routeOpen
+            ? "bg-dark-900 border-white/20 text-brand-400 shadow-xl"
+            : "bg-white/90 border-gray-200 text-gray-700 hover:bg-white hover:text-dark-900 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
             }`}
-          title="Directions"
+          title="Map Options"
         >
-          <svg className="w-6 h-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-          </svg>
-        </button>
-
-        {/* Locate Me */}
-        <button
-          onClick={() => setFollowUser((v) => !v)}
-          className={`h-12 w-12 flex items-center justify-center rounded-2xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${followUser
-            ? "bg-accent-600 border-accent-400 text-white shadow-accent-500/30"
-            : "bg-dark-900/80 border-white/10 text-gray-200 hover:bg-dark-800 hover:text-white"
-            }`}
-          title="Locate Me"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <svg className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
         </button>
 
@@ -335,13 +326,62 @@ export default function MapView({
         <button
           onClick={fetchAllIssues}
           disabled={isLoadingIssues}
-          className={`h-12 w-12 flex items-center justify-center rounded-2xl shadow-lg border backdrop-blur-md transition-all active:scale-95 bg-dark-900/80 border-white/10 text-gray-200 hover:bg-dark-800 hover:text-white ${isLoadingIssues ? "animate-pulse" : ""}`}
+          className={`h-12 w-12 flex items-center justify-center rounded-full md:rounded-2xl shadow-xl border backdrop-blur-md transition-all active:scale-95 shadow-[0_4px_12px_rgba(0,0,0,0.1)] bg-white/90 border-gray-200 text-gray-700 hover:bg-white hover:text-dark-900 ${isLoadingIssues ? "animate-pulse" : ""}`}
           title="Refresh Issues"
         >
-          <svg className={`w-6 h-6 ${isLoadingIssues ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className={`w-5 h-5 ${isLoadingIssues ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
+
+        {/* Locate Me (Primary Action Style) */}
+        <button
+          onClick={() => setFollowUser((v) => !v)}
+          className={`h-12 w-12 flex items-center justify-center rounded-full md:rounded-2xl shadow-xl border backdrop-blur-md transition-all active:scale-95 ${followUser
+            ? "bg-brand-500 border-brand-400 text-white shadow-brand-500/40"
+            : "bg-white/90 border-gray-200 text-brand-600 hover:bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+            }`}
+          title="Locate Me"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* ⚪ Mobile Bottom Sheet (Filters) */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[32px] pt-3 pb-8 md:pb-6 px-2 flex flex-col z-[48] transition-transform duration-300">
+        {/* Grab Handle */}
+        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+
+        {/* Horizontal scroll area for issue filters */}
+        <div className="overflow-x-auto no-scrollbar pb-2">
+          <div className="flex gap-2 px-2 min-w-max">
+            {[
+              { label: "All Issues", value: "" },
+              { label: "Streets", value: "Pothole" },
+              { label: "Sanitation", value: "Garbage" },
+              { label: "Lighting", value: "Streetlight" },
+              { label: "Traffic", value: "Traffic" }
+            ].map((filter) => (
+              <button
+                key={filter.label}
+                onClick={() => {
+                  if (typeof setIssueFilter === "function") {
+                    setIssueFilter(filter.value);
+                  }
+                }}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${(issueFilter === filter.value || (issueFilter === "" && filter.value === ""))
+                  ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
+                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                  }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {geoError && (
