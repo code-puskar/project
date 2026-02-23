@@ -244,17 +244,22 @@ export default function DeckMap({
               if (mapRef.current) {
                 try {
                   const map = mapRef.current.getMap();
-                  const features = map.queryRenderedFeatures([info.x, info.y]);
+
+                  // Use a 20x20 pixel bounding box around the click to be forgiving (especially for mobile/fat-fingers)
+                  const bbox = [
+                    [info.x - 10, info.y - 10],
+                    [info.x + 10, info.y + 10]
+                  ];
+                  const features = map.queryRenderedFeatures(bbox);
+
+                  const roadKeywords = ['road', 'street', 'bridge', 'tunnel', 'motorway', 'highway', 'path', 'pedestrian', 'transit', 'crosswalk'];
 
                   // Check if any feature belongs to a road layer
-                  isRoad = features.some(f =>
-                    (f.layer.id && f.layer.id.toLowerCase().includes('road')) ||
-                    (f.sourceLayer && f.sourceLayer.toLowerCase().includes('road')) ||
-                    (f.layer.id && f.layer.id.toLowerCase().includes('street')) ||
-                    (f.sourceLayer && f.sourceLayer.toLowerCase().includes('street')) ||
-                    (f.layer.id && f.layer.id.toLowerCase().includes('bridge')) ||
-                    (f.layer.id && f.layer.id.toLowerCase().includes('tunnel'))
-                  );
+                  isRoad = features.some(f => {
+                    const layerId = f.layer?.id?.toLowerCase() || "";
+                    const sourceLayer = f.sourceLayer?.toLowerCase() || "";
+                    return roadKeywords.some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
+                  });
                 } catch (err) {
                   console.error("Failed to query rendered features:", err);
                   isRoad = true; // Fallback to true if we can't determine
