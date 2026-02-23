@@ -185,6 +185,7 @@ function App() {
         <Dashboard
           searchLocation={searchLocation}
           issueFilter={issueFilter}
+          setIssueFilter={setIssueFilter}
           mapStyleId={mapStyleId}
           show3D={show3D}
           onStyleChange={setMapStyleId}

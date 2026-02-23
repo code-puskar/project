@@ -62,10 +62,11 @@ export default function Navbar({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-      <div className="absolute inset-0 bg-dark-900/80 backdrop-blur-md border-b border-white/10 shadow-lg supports-[backdrop-filter]:bg-dark-900/60"></div>
+    <header className="fixed top-4 left-4 right-4 md:top-0 md:left-0 md:right-0 z-50 transition-all duration-300">
+      {/* Background shape: Pill on mobile, edge-to-edge on desktop */}
+      <div className="absolute inset-0 bg-dark-900 shadow-xl border border-white/10 rounded-2xl md:bg-dark-900/80 md:backdrop-blur-md md:border-b md:border-white/10 md:shadow-lg md:rounded-none md:supports-[backdrop-filter]:bg-dark-900/60"></div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="relative mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2 md:gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
@@ -73,40 +74,29 @@ export default function Navbar({
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">SmartCity</span>
+          <span className="text-base md:text-lg font-bold tracking-tight text-white whitespace-nowrap">SmartCity</span>
         </div>
 
-        {/* Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        {/* Search Bar - Takes up remaining space in the pill */}
+        <div className="flex-1 max-w-md mx-2 md:mx-4">
           <div className="relative w-full group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-2 md:pl-3 flex items-center pointer-events-none">
               <svg className="h-4 w-4 text-gray-400 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <input
-              className="block w-full pl-10 pr-3 py-2 border border-white/10 rounded-xl leading-5 bg-dark-800/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-dark-800 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 sm:text-sm transition-all duration-200"
+              className="block w-full pl-8 md:pl-10 pr-3 py-1.5 md:py-2 border-none md:border md:border-white/10 rounded-xl leading-5 bg-transparent md:bg-dark-800/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-dark-800 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm md:text-sm transition-all duration-200"
               placeholder="Search location..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <div className="absolute inset-y-0 right-0 flex items-center">
-              <button
-                onClick={handleSearch}
-                className="mr-1 p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Search"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
+        {/* Actions - Desktop Only Controls */}
+        <div className="hidden md:flex items-center gap-3">
           <button
             onClick={() => {
               if (!navigator.geolocation) {
@@ -173,68 +163,68 @@ export default function Navbar({
           </button>
 
           <div className="h-6 w-px bg-white/10 mx-1"></div>
+        </div>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-            >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-accent-500 p-[1px]">
-                <div className="w-full h-full rounded-lg bg-dark-900 flex items-center justify-center text-xs font-bold text-white">
-                  {user?.name?.[0] || "U"}
-                </div>
+        {/* Profile Dropdown - Always Visible */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center justify-center w-8 h-8 md:w-auto md:h-auto md:gap-2 md:p-1 md:pl-2 md:pr-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent md:hover:border-white/10"
+          >
+            {/* Small avatar box on mobile, unchanged on desktop */}
+            <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center">
+              <span className="text-xs font-bold text-white uppercase">{user?.name?.slice(0, 2) || "U1"}</span>
+            </div>
+
+            <div className="hidden md:block text-left">
+              <p className="text-xs font-medium text-white leading-none">{user?.name || "User"}</p>
+              <p className="text-[10px] text-brand-400 mt-0.5 font-medium">{user?.reputation || 0} Rep</p>
+            </div>
+            <svg className={`hidden md:block w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-60 rounded-xl bg-dark-900 border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+              <div className="p-4 bg-dark-800/50 border-b border-white/5">
+                <p className="text-sm font-medium text-white">{user?.name}</p>
+                <p className="text-xs text-gray-400">{user?.email}</p>
               </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-medium text-white leading-none">{user?.name || "User"}</p>
-                <p className="text-[10px] text-brand-400 mt-0.5 font-medium">{user?.reputation || 0} Rep</p>
-              </div>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
 
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-60 rounded-xl bg-dark-900 border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
-                <div className="p-4 bg-dark-800/50 border-b border-white/5">
-                  <p className="text-sm font-medium text-white">{user?.name}</p>
-                  <p className="text-xs text-gray-400">{user?.email}</p>
-                </div>
-
-                <div className="p-2 space-y-1">
-                  <div className="px-3 py-2 rounded-lg bg-white/5 mx-2 my-1">
-                    <div className="flex justify-between items-center text-sm text-gray-300">
-                      <span>Reputation</span>
-                      <span className="font-bold text-brand-400">{user?.reputation || 0}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 px-2 pb-2">
-                    <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
-                      <span className="block text-xs text-gray-500 uppercase tracking-tighter">Reported</span>
-                      <span className="block text-lg font-bold text-white">{user?.stats?.reported || 0}</span>
-                    </div>
-                    <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
-                      <span className="block text-xs text-gray-500 uppercase tracking-tighter">Validated</span>
-                      <span className="block text-lg font-bold text-white">{user?.stats?.validated || 0}</span>
-                    </div>
+              <div className="p-2 space-y-1">
+                <div className="px-3 py-2 rounded-lg bg-white/5 mx-2 my-1">
+                  <div className="flex justify-between items-center text-sm text-gray-300">
+                    <span>Reputation</span>
+                    <span className="font-bold text-brand-400">{user?.reputation || 0}</span>
                   </div>
                 </div>
 
-                <div className="p-1 border-t border-white/5">
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Sign Out
-                  </button>
+                <div className="grid grid-cols-2 gap-2 px-2 pb-2">
+                  <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
+                    <span className="block text-xs text-gray-500 uppercase tracking-tighter">Reported</span>
+                    <span className="block text-lg font-bold text-white">{user?.stats?.reported || 0}</span>
+                  </div>
+                  <div className="bg-dark-800 rounded-lg p-2 text-center border border-white/5">
+                    <span className="block text-xs text-gray-500 uppercase tracking-tighter">Validated</span>
+                    <span className="block text-lg font-bold text-white">{user?.stats?.validated || 0}</span>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="p-1 border-t border-white/5">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
