@@ -33,6 +33,15 @@ export default function DeckMap({
   const [selectedInfo, setSelectedInfo] = useState(null);
   const mapRef = useRef(null);
 
+  // Detect Mobile
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     if (!position) return;
     if (!initialFlyRef.current) {
@@ -124,7 +133,7 @@ export default function DeckMap({
       id: "issues-glow",
       data,
       pickable: false,
-      opacity: isDarkMode ? 0.8 : 0.4, // High opacity for neon core glow
+      opacity: isMobile ? 0 : (isDarkMode ? 0.8 : 0.4), // Disable glow on mobile
       stroked: false,
       filled: true,
       radiusMinPixels: glowMarkerSize,
@@ -133,7 +142,7 @@ export default function DeckMap({
       getPosition: (d) => d.coordinates,
       getRadius: (d) => (d.rating ? Math.max(6, d.rating * 3) : 8), // Glow radius
       getFillColor: (d) => [...getMarkerColor(d), isDarkMode ? 200 : 100], // Very bright alpha
-      parameters: {
+      parameters: isMobile ? {} : {
         blend: true,
         blendFunc: [770, 1], // Additive blending for light-stacking effect
       }
@@ -263,45 +272,49 @@ export default function DeckMap({
           mapStyle={`mapbox://styles/mapbox/${mapStyleId}`}
           mapboxAccessToken={mapboxToken}
           style={{ width: "100%", height: "100%" }}
-          terrain={{ source: 'mapbox-dem', exaggeration: 1.5 }}
+          terrain={show3D && !isMobile ? { source: 'mapbox-dem', exaggeration: 1.5 } : undefined}
         >
-          <Source
-            id="mapbox-dem"
-            type="raster-dem"
-            url="mapbox://mapbox.mapbox-terrain-dem-v1"
-            tileSize={512}
-            maxzoom={14}
-          />
-          <Layer
-            id="3d-buildings"
-            source="composite"
-            source-layer="building"
-            filter={['==', 'extrude', 'true']}
-            type="fill-extrusion"
-            minzoom={14}
-            paint={{
-              'fill-extrusion-color': '#aaa',
-              'fill-extrusion-height': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                14,
-                0,
-                14.05,
-                ['get', 'height']
-              ],
-              'fill-extrusion-base': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                14,
-                0,
-                14.05,
-                ['get', 'min_height']
-              ],
-              'fill-extrusion-opacity': 0.6
-            }}
-          />
+          {show3D && !isMobile && (
+            <>
+              <Source
+                id="mapbox-dem"
+                type="raster-dem"
+                url="mapbox://mapbox.mapbox-terrain-dem-v1"
+                tileSize={512}
+                maxzoom={14}
+              />
+              <Layer
+                id="3d-buildings"
+                source="composite"
+                source-layer="building"
+                filter={['==', 'extrude', 'true']}
+                type="fill-extrusion"
+                minzoom={14}
+                paint={{
+                  'fill-extrusion-color': '#aaa',
+                  'fill-extrusion-height': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    14,
+                    0,
+                    14.05,
+                    ['get', 'height']
+                  ],
+                  'fill-extrusion-base': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    14,
+                    0,
+                    14.05,
+                    ['get', 'min_height']
+                  ],
+                  'fill-extrusion-opacity': 0.6
+                }}
+              />
+            </>
+          )}
           <NavigationControl position="top-right" />
           <GeolocateControl position="top-right" showAccuracyCircle trackUserLocation />
           <ScaleControl position="bottom-left" />
