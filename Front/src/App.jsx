@@ -50,7 +50,7 @@ function App() {
       setToken(storedToken);
       fetchProfile(storedToken);
       setShowLogin(false);
-      // If user is already logged in, we can optionally skip landing, but we will respect the hash for now.
+      setShowLanding(false); // Skip landing since user is already logged in
     } else {
       // Don't show login immediately if they are on the landing page
     }
@@ -66,9 +66,13 @@ function App() {
       setUser(res.data);
     } catch (e) {
       console.error("Failed to fetch profile in App", e);
-      // If token is invalid/expired, clear it
-      localStorage.removeItem("access_token");
-      setToken(null);
+      // Only clear token if it's explicitly an unauthorized error (e.g. expired token)
+      // Otherwise, keep the token so a simple network or server error doesn't log the user out.
+      if (e.response && e.response.status === 401) {
+        localStorage.removeItem("access_token");
+        setToken(null);
+        setShowLanding(true); // Go back to landing page if token is truly invalid
+      }
     }
   };
 

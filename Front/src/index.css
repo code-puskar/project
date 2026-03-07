@@ -20,6 +20,7 @@
 
 body {
   margin: 0;
+  overscroll-behavior-y: none;
   font-family: "Inter", sans-serif;
   @apply bg-dark-900 text-gray-200;
   background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 50%, #020617 100%);
