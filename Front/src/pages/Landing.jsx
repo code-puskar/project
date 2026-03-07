@@ -1,3 +1,4 @@
+// src/pages/Landing.jsx
 import React from "react";
 import Hero from "../components/landing/Hero";
 import FeaturesBento from "../components/landing/FeaturesBento";
@@ -7,7 +8,7 @@ import Footer from "../components/landing/Footer";
 
 export default function Landing({ onOpenLogin, onOpenRegister }) {
     return (
-        <div className="bg-slate-900 text-white min-h-screen overflow-x-hidden w-full font-sans antialiased selection:bg-brand-500/30">
+        <div className="bg-[#060918] text-white min-h-screen font-sans antialiased selection:bg-blue-500/30 overflow-x-hidden">
             <Hero onOpenLogin={onOpenLogin} onOpenRegister={onOpenRegister} />
             <StatsBar />
             <FeaturesBento />
