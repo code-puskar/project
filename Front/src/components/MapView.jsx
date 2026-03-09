@@ -227,9 +227,8 @@ export default function MapView({
       return;
     }
 
-    // Improved Mapbox parameters for premium feel
-    // - types: prioritize address, poi, neighborhood, place
-    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?autocomplete=true&limit=8&access_token=${mapboxToken}&fuzzyMatch=true&country=in&types=address,poi,neighborhood,place,locality`;
+    // Broaden search query to allow maximum results across all location types
+    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?autocomplete=true&limit=8&access_token=${mapboxToken}&fuzzyMatch=true&country=in`;
     if (position) {
       url += `&proximity=${position[1]},${position[0]}`;
     }
@@ -454,7 +453,7 @@ export default function MapView({
 
       {/* 🗺️ Sliding Route Planner Drawer */}
       <div
-        className={`absolute top-0 bottom-0 left-0 w-full md:w-[400px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[60] flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
+        className={`absolute top-0 bottom-0 left-0 w-full md:w-[400px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[60] pt-20 md:pt-24 flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
             ${routeOpen ? "translate-x-0" : "-translate-x-full"}
          `}
       >
@@ -622,7 +621,10 @@ export default function MapView({
                 </div>
               </div>
 
-              <button className="w-full py-4 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2">
+              <button
+                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${startLocation.lat},${startLocation.lng}&destination=${destLocation.lat},${destLocation.lng}`, '_blank')}
+                className="w-full py-4 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2"
+              >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
                 Start Navigation
               </button>
