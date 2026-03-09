@@ -10,127 +10,23 @@ import Navbar from "./components/Navbar";
 import IssueDrawer from "./components/IssueDrawer";
 import Landing from "./pages/Landing";
 
-function App() {
-  const [searchLocation, setSearchLocation] = useState(null);
-  const [issueFilter, setIssueFilter] = useState("");
-  const [mapStyleId, setMapStyleId] = useState("standard");
-  const [show3D, setShow3D] = useState(false);
+import { Routes, Route } from "react-router-dom";
+import AdminLayout from "./pages/Admin/AdminLayout";
 
-  const [token, setToken] = useState(null);
-  const [authReady, setAuthReady] = useState(false);
-  const [user, setUser] = useState(null); // Keep track of user for isOwner check
-
-  const [showLanding, setShowLanding] = useState(true);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showIssueModal, setShowIssueModal] = useState(false);
-
-  const [selectedIssue, setSelectedIssue] = useState(null); // For Drawer
-
-  const [pendingLocation, setPendingLocation] = useState(null);
-  const [issues, setIssues] = useState([]);
-
-  // 🔑 Auth hydration
-  useEffect(() => {
-    // Check hash for #dashboard to skip landing page immediately if previously entered
-    if (window.location.hash === "#dashboard") {
-      setShowLanding(false);
-    }
-
-    const handleHashChange = () => {
-      if (window.location.hash === "#dashboard") {
-        setShowLanding(false);
-      }
-    };
-    window.addEventListener("hashchange", handleHashChange);
-
-    const storedToken = localStorage.getItem("access_token");
-
-    if (storedToken) {
-      setToken(storedToken);
-      fetchProfile(storedToken);
-      setShowLogin(false);
-      setShowLanding(false); // Skip landing since user is already logged in
-    } else {
-      // Don't show login immediately if they are on the landing page
-    }
-
-    setAuthReady(true);
-
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
-
-  const fetchProfile = async (t) => {
-    try {
-      const res = await api.get("/users/me");
-      setUser(res.data);
-    } catch (e) {
-      console.error("Failed to fetch profile in App", e);
-      // Only clear token if it's explicitly an unauthorized error (e.g. expired token)
-      // Otherwise, keep the token so a simple network or server error doesn't log the user out.
-      if (e.response && e.response.status === 401) {
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setShowLanding(true); // Go back to landing page if token is truly invalid
-      }
-    }
-  };
-
-  if (!authReady) return null;
-
-  // 🗺️ Map click handler
-  const handleMapClick = (latlng) => {
-    if (!token) {
-      setPendingLocation(latlng);
-      setShowLogin(true);
-      return;
-    }
-
-    // Close drawer if open
-    setSelectedIssue(null);
-
-    setPendingLocation(latlng);
-    setShowIssueModal(true);
-  };
-
-  // 🔐 Login success
-  const handleLoginSuccess = (newToken) => {
-    localStorage.setItem("access_token", newToken);
-    setToken(newToken);
-    fetchProfile(newToken);
-    setShowLogin(false);
-
-    // Automatically hide landing and show dashboard upon login
-    setShowLanding(false);
-
-    if (pendingLocation) {
-      setShowIssueModal(true);
-    }
-  };
-
-  // 📝 Issue submit
-  const handleIssueSubmit = async (issue) => {
-    try {
-      await api.post("/issues/", issue);
-      setShowIssueModal(false);
-      setPendingLocation(null);
-      refreshIssues();
-    } catch (err) {
-      console.error("Failed to submit issue", err);
-      const serverDetail = err.response?.data?.detail || err.response?.data || err.message;
-      alert("Could not submit issue: " + JSON.stringify(serverDetail));
-    }
-  };
-
-  const refreshIssues = async () => {
-    try {
-      const res = await api.get("/issues/");
-      setIssues(res.data);
-    } catch (e) {
-      console.error("Failed to refresh issues", e);
-    }
-  };
-
+function MainApp({
+  showLanding, setShowLanding,
+  showLogin, setShowLogin,
+  showRegister, setShowRegister,
+  showIssueModal, setShowIssueModal,
+  selectedIssue, setSelectedIssue,
+  pendingLocation, setPendingLocation,
+  issues, setIssues,
+  searchLocation, setSearchLocation,
+  issueFilter, setIssueFilter,
+  mapStyleId, setMapStyleId,
+  show3D, setShow3D,
+  user, handleLoginSuccess, handleIssueSubmit, refreshIssues, handleMapClick
+}) {
   // Render Landing Page if showLanding is true
   if (showLanding) {
     return (
@@ -140,7 +36,6 @@ function App() {
           onOpenRegister={() => setShowRegister(true)}
         />
 
-        {/* We can still render the login/register modals over the landing page if triggered */}
         {showLogin && (
           <div className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center pointer-events-auto">
             <Login
@@ -182,10 +77,8 @@ function App() {
         onToggle3D={() => setShow3D((v) => !v)}
       />
 
-
-
       {/* 🗺️ Mount MAP ONLY when login is NOT visible */}
-      {!showLogin && !showRegister && ( // Only show dashboard if neither login nor register is visible
+      {!showLogin && !showRegister && (
         <Dashboard
           searchLocation={searchLocation}
           issueFilter={issueFilter}
@@ -201,8 +94,6 @@ function App() {
           onIssueSelect={(issue) => setSelectedIssue(issue)}
         />
       )}
-
-
 
       {/* 🔐 LOGIN MODAL */}
       {showLogin && (
@@ -222,7 +113,7 @@ function App() {
       {showRegister && (
         <div className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center pointer-events-auto">
           <Register
-            onSuccess={handleLoginSuccess} // Assuming register also logs in the user
+            onSuccess={handleLoginSuccess}
             onClose={() => setShowRegister(false)}
             onSwitchToLogin={() => {
               setShowRegister(false);
@@ -252,4 +143,126 @@ function App() {
   );
 }
 
-export default App;
+function AppWrapper() {
+  const [searchLocation, setSearchLocation] = useState(null);
+  const [issueFilter, setIssueFilter] = useState("");
+  const [mapStyleId, setMapStyleId] = useState("standard");
+  const [show3D, setShow3D] = useState(false);
+
+  const [token, setToken] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const [showLanding, setShowLanding] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+
+  const [selectedIssue, setSelectedIssue] = useState(null);
+
+  const [pendingLocation, setPendingLocation] = useState(null);
+  const [issues, setIssues] = useState([]);
+
+  // 🔑 Auth hydration
+  useEffect(() => {
+    if (window.location.hash === "#dashboard") setShowLanding(false);
+
+    const handleHashChange = () => {
+      if (window.location.hash === "#dashboard") setShowLanding(false);
+    };
+    window.addEventListener("hashchange", handleHashChange);
+
+    const storedToken = localStorage.getItem("access_token");
+
+    if (storedToken) {
+      setToken(storedToken);
+      fetchProfile(storedToken);
+      setShowLogin(false);
+      setShowLanding(false);
+    }
+
+    setAuthReady(true);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  const fetchProfile = async (t) => {
+    try {
+      const res = await api.get("/users/me");
+      setUser(res.data);
+    } catch (e) {
+      console.error("Failed to fetch profile in App", e);
+      if (e.response && e.response.status === 401) {
+        localStorage.removeItem("access_token");
+        setToken(null);
+        setShowLanding(true);
+      }
+    }
+  };
+
+  if (!authReady) return null;
+
+  const handleMapClick = (latlng) => {
+    if (!token) {
+      setPendingLocation(latlng);
+      setShowLogin(true);
+      return;
+    }
+    setSelectedIssue(null);
+    setPendingLocation(latlng);
+    setShowIssueModal(true);
+  };
+
+  const handleLoginSuccess = (newToken) => {
+    localStorage.setItem("access_token", newToken);
+    setToken(newToken);
+    fetchProfile(newToken);
+    setShowLogin(false);
+    setShowLanding(false);
+    if (pendingLocation) setShowIssueModal(true);
+  };
+
+  const handleIssueSubmit = async (issue) => {
+    try {
+      await api.post("/issues/", issue);
+      setShowIssueModal(false);
+      setPendingLocation(null);
+      refreshIssues();
+    } catch (err) {
+      console.error("Failed to submit issue", err);
+      const serverDetail = err.response?.data?.detail || err.response?.data || err.message;
+      alert("Could not submit issue: " + JSON.stringify(serverDetail));
+    }
+  };
+
+  const refreshIssues = async () => {
+    try {
+      const res = await api.get("/issues/");
+      setIssues(res.data);
+    } catch (e) {
+      console.error("Failed to refresh issues", e);
+    }
+  };
+
+  // Ensure routing functions correctly
+  return (
+    <Routes>
+      <Route path="/admin/*" element={<AdminLayout />} />
+      <Route path="/*" element={<MainApp
+        showLanding={showLanding} setShowLanding={setShowLanding}
+        showLogin={showLogin} setShowLogin={setShowLogin}
+        showRegister={showRegister} setShowRegister={setShowRegister}
+        showIssueModal={showIssueModal} setShowIssueModal={setShowIssueModal}
+        selectedIssue={selectedIssue} setSelectedIssue={setSelectedIssue}
+        pendingLocation={pendingLocation} setPendingLocation={setPendingLocation}
+        issues={issues} setIssues={setIssues}
+        searchLocation={searchLocation} setSearchLocation={setSearchLocation}
+        issueFilter={issueFilter} setIssueFilter={setIssueFilter}
+        mapStyleId={mapStyleId} setMapStyleId={setMapStyleId}
+        show3D={show3D} setShow3D={setShow3D}
+        user={user} handleLoginSuccess={handleLoginSuccess} handleIssueSubmit={handleIssueSubmit} refreshIssues={refreshIssues} handleMapClick={handleMapClick}
+      />} />
+    </Routes>
+  )
+}
+
+export default AppWrapper;
