@@ -93,13 +93,55 @@ export default function MapView({
     fetchAllIssues();
   }, []);
 
-  // Poll issues periodically to keep in sync across accounts
   useEffect(() => {
+    // Poll issues periodically to keep in sync across accounts
     const id = setInterval(() => {
       fetchAllIssues();
     }, 30000);
     return () => clearInterval(id);
   }, []);
+
+  // Auto-fetch route when both locations are set
+  useEffect(() => {
+    if (startLocation && destLocation) {
+      handleCalculateRoute();
+    }
+  }, [startLocation, destLocation]);
+
+  const handleCalculateRoute = async () => {
+    if (!startLocation || !destLocation) return;
+    const routeInfo = await fetchRoute(startLocation, destLocation);
+    if (routeInfo) {
+      setRoutePath(routeInfo.path);
+      setRouteSummary({
+        distance: routeInfo.distance,
+        duration: routeInfo.duration,
+      });
+      // Try to zoom to fit the route
+      if (routeInfo.path.length > 0) {
+        setCenterRequest({
+          lat: startLocation.lat,
+          lng: startLocation.lng,
+          zoom: 12
+        });
+      }
+    } else {
+      addNotification("Could not find a valid driving route.");
+      setRoutePath(null);
+      setRouteSummary(null);
+    }
+  };
+
+  const handleSwapLocations = () => {
+    const tempQuery = startQuery;
+    const tempLocation = startLocation;
+
+    setStartQuery(destQuery);
+    setStartLocation(destLocation);
+
+    setDestQuery(tempQuery);
+    setDestLocation(tempLocation);
+  };
 
   // When follow-user is re-enabled, recenter once
   useEffect(() => {
@@ -172,9 +214,6 @@ export default function MapView({
   const geocode = async (query) => {
     if (!query) return null;
     let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=1&country=in`;
-    if (position) {
-      url += `&proximity=${position[1]},${position[0]}`;
-    }
     const res = await fetch(url);
     const data = await res.json();
     if (!data.features || !data.features.length) return null;
@@ -187,30 +226,53 @@ export default function MapView({
       setter([]);
       return;
     }
-    // Limit increased to 20, enabled fuzzyMatch, restricted to India
-    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?autocomplete=true&limit=20&access_token=${mapboxToken}&fuzzyMatch=true&country=in`;
+
+    // Improved Mapbox parameters for premium feel
+    // - types: prioritize address, poi, neighborhood, place
+    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?autocomplete=true&limit=8&access_token=${mapboxToken}&fuzzyMatch=true&country=in&types=address,poi,neighborhood,place,locality`;
     if (position) {
       url += `&proximity=${position[1]},${position[0]}`;
     }
-
-
 
     try {
       const res = await fetch(url);
       const data = await res.json();
 
-
-
       const items =
-        data.features?.map((f) => ({
-          label: f.place_name,
-          lat: f.center[1],
-          lng: f.center[0],
-        })) || [];
+        data.features?.map((f) => {
+          // Split the text into main name and sub-address for better UI
+          const parts = f.place_name.split(", ");
+          const mainText = parts[0];
+          const subText = parts.slice(1).join(", ") || "Known Location";
+
+          return {
+            label: f.place_name,
+            mainText,
+            subText,
+            lat: f.center[1],
+            lng: f.center[0],
+            types: f.place_type || []
+          };
+        }) || [];
       setter(items);
     } catch (e) {
       console.error("Failed to fetch suggestions", e);
       setter([]);
+    }
+  };
+
+  const getCurrentLocationName = async () => {
+    if (!position) return null;
+    try {
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${position[1]},${position[0]}.json?access_token=${mapboxToken}&types=address,poi&limit=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.features?.length > 0) {
+        return data.features[0].place_name;
+      }
+      return "Current Location";
+    } catch (e) {
+      return "Current Location";
     }
   };
 
@@ -390,46 +452,67 @@ export default function MapView({
         </div>
       )}
 
-      {/* 🗺️ Directions Panel */}
-      {routeOpen && (
-        <div className="absolute bottom-24 left-4 z-50 w-[340px] bg-dark-900/90 backdrop-blur-2xl text-white rounded-3xl border border-white/10 shadow-2xl p-5 transform transition-all animate-in slide-in-from-bottom-4 duration-200">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2 text-brand-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              <span className="font-bold tracking-wide text-white">Route Planner</span>
-            </div>
-
+      {/* 🗺️ Sliding Route Planner Drawer */}
+      <div
+        className={`absolute top-0 bottom-0 left-0 w-full md:w-[400px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[60] flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
+            ${routeOpen ? "translate-x-0" : "-translate-x-full"}
+         `}
+      >
+        {/* Header Options */}
+        <div className="flex items-center justify-between p-6 pb-2">
+          <div className="flex items-center gap-3">
             <button
-              className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-              onClick={() => {
-                setStartLocation(null);
-                setDestLocation(null);
-                setRoutePath(null);
-                setRouteSummary(null);
-                setStartQuery("");
-                setDestQuery("");
-                setStartSuggestions([]);
-                setDestSuggestions([]);
-              }}
-              title="Clear Route"
+              onClick={() => setRouteOpen(false)}
+              className="p-2 -ml-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              title="Close Navigation"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </button>
+            <h2 className="text-xl font-bold tracking-tight">Plan Route</h2>
           </div>
 
-          <div className="space-y-3 relative">
-            {/* Connecting line */}
-            <div className="absolute left-[18px] top-[18px] bottom-[18px] w-0.5 bg-gradient-to-b from-brand-500 to-accent-500 opacity-30 pointer-events-none"></div>
+          <button
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            onClick={() => {
+              setStartLocation(null);
+              setDestLocation(null);
+              setRoutePath(null);
+              setRouteSummary(null);
+              setStartQuery("");
+              setDestQuery("");
+              setStartSuggestions([]);
+              setDestSuggestions([]);
+            }}
+            title="Clear All"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div className="px-6 py-4 flex gap-4 relative">
+          {/* Left Timeline Guide */}
+          <div className="flex flex-col items-center mt-3 pb-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
+            <div className="w-[1.5px] flex-1 border-l-[1.5px] border-dashed border-gray-600 my-1"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-accent-500 shadow-[0_0_10px_rgba(168,85,247,0.5)] z-10"></div>
+          </div>
+
+          {/* Inputs Area */}
+          <div className="flex-1 space-y-3 relative">
+
+            {/* Swap Button inside center right */}
+            <button
+              onClick={handleSwapLocations}
+              className="absolute right-2 top-11 z-[50] w-8 h-8 flex items-center justify-center bg-dark-800 border border-white/10 rounded-full text-gray-400 hover:text-brand-400 hover:bg-white/10 shadow-lg transition-colors group"
+              title="Swap Locations"
+            >
+              <svg className="w-4 h-4 transform group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+            </button>
 
             {/* Start Input */}
             <div className="relative group">
-              <div className="absolute left-3 top-3.5 z-10 w-2.5 h-2.5 rounded-full bg-brand-500 border-2 border-dark-900"></div>
               <input
-                className="w-full pl-9 pr-3 py-3 rounded-xl bg-dark-800/60 border border-white/5 text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-800 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50 transition-all"
+                className="w-full pr-10 pl-4 py-3.5 rounded-2xl bg-dark-800 border border-transparent text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-700 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50 transition-all font-medium"
                 placeholder="Choose start location..."
                 value={startQuery}
                 onChange={(e) => {
@@ -437,30 +520,55 @@ export default function MapView({
                   fetchSuggestions(e.target.value, setStartSuggestions);
                 }}
               />
+              {/* Suggestions List */}
               {startSuggestions.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-dark-800 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
+                <div className="absolute z-[100] left-0 right-0 top-full mt-2 bg-dark-800 border border-white/10 rounded-2xl shadow-2xl max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {position && (
+                    <button
+                      className="w-full text-left px-5 py-4 hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-3"
+                      onClick={async () => {
+                        const posName = await getCurrentLocationName();
+                        setStartQuery(posName);
+                        setStartLocation({ lat: position[0], lng: position[1], label: posName });
+                        setStartSuggestions([]);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+                      </div>
+                      <div>
+                        <div className="text-brand-400 font-semibold text-sm">Your Current Location</div>
+                        <div className="text-gray-500 text-xs mt-0.5">Use GPS</div>
+                      </div>
+                    </button>
+                  )}
                   {startSuggestions.map((s, idx) => (
                     <button
                       key={idx}
-                      className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors text-gray-200 text-sm border-b border-white/5 last:border-0 flex items-center gap-2"
+                      className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-3"
                       onClick={() => {
-                        setStartQuery(s.label);
+                        setStartQuery(s.mainText);
                         setStartLocation({ lat: s.lat, lng: s.lng, label: s.label });
                         setStartSuggestions([]);
                       }}
                     >
-                      <span className="opacity-50">📍</span> {s.label}
+                      <div className="w-8 h-8 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400">
+                        {s.types?.includes("poi") ? "📍" : "🗺️"}
+                      </div>
+                      <div className="truncate">
+                        <div className="text-gray-200 font-semibold text-sm truncate">{s.mainText}</div>
+                        <div className="text-gray-500 text-xs truncate mt-0.5">{s.subText}</div>
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Dest Input */}
+            {/* Destination Input */}
             <div className="relative group">
-              <div className="absolute left-3 top-3.5 z-10 w-2.5 h-2.5 rounded-full bg-accent-500 border-2 border-dark-900"></div>
               <input
-                className="w-full pl-9 pr-3 py-3 rounded-xl bg-dark-800/60 border border-white/5 text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-800 focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all"
+                className="w-full pr-10 pl-4 py-3.5 rounded-2xl bg-dark-800 border border-transparent text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-700 focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all font-medium"
                 placeholder="Choose destination..."
                 value={destQuery}
                 onChange={(e) => {
@@ -468,100 +576,73 @@ export default function MapView({
                   fetchSuggestions(e.target.value, setDestSuggestions);
                 }}
               />
+              {/* Suggestions List */}
               {destSuggestions.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-dark-800 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
+                <div className="absolute z-[100] left-0 right-0 top-full mt-2 bg-dark-800 border border-white/10 rounded-2xl shadow-2xl max-h-[300px] overflow-y-auto custom-scrollbar">
                   {destSuggestions.map((s, idx) => (
                     <button
                       key={idx}
-                      className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors text-gray-200 text-sm border-b border-white/5 last:border-0 flex items-center gap-2"
+                      className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-3"
                       onClick={() => {
-                        setDestQuery(s.label);
+                        setDestQuery(s.mainText);
                         setDestLocation({ lat: s.lat, lng: s.lng, label: s.label });
                         setDestSuggestions([]);
                       }}
                     >
-                      <span className="opacity-50">🏁</span> {s.label}
+                      <div className="w-8 h-8 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400">
+                        {s.types?.includes("poi") ? "📍" : "🗺️"}
+                      </div>
+                      <div className="truncate">
+                        <div className="text-gray-200 font-semibold text-sm truncate">{s.mainText}</div>
+                        <div className="text-gray-500 text-xs truncate mt-0.5">{s.subText}</div>
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
-            <div className="flex gap-2 pt-2">
-              <button
-                className="px-3 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-gray-400 hover:text-brand-400 transition-all"
-                title="Use current location"
-                onClick={() => {
-                  if (position) {
-                    setStartLocation({ lat: position[0], lng: position[1], label: "Current location" });
-                    setStartQuery("Current location");
-                  }
-                }}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
+        {/* Route Summary Area */}
+        {routePath && routeSummary ? (
+          <div className="px-6 flex-1 flex flex-col pt-4">
+            <div className="bg-gradient-to-br from-brand-900/30 to-accent-900/30 border border-brand-500/20 rounded-3xl p-6 mb-6">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <div className="text-gray-400 text-sm font-medium mb-1">Fastest Route</div>
+                  <div className="text-4xl font-black text-white">
+                    {Math.round(routeSummary.duration / 60)} <span className="text-xl text-gray-400 font-semibold">min</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-brand-400 text-xl font-bold">
+                    {(routeSummary.distance / 1000).toFixed(1)} <span className="text-sm">km</span>
+                  </div>
+                </div>
+              </div>
 
-              <button
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-bold shadow-lg shadow-brand-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                onClick={async () => {
-                  const start = startLocation || (await geocode(startQuery));
-                  const dest = destLocation || (await geocode(destQuery));
-                  if (!start || !dest) {
-                    addNotification("Please select valid start and destination points");
-                    return;
-                  }
-                  const route = await fetchRoute(start, dest);
-                  if (!route) {
-                    addNotification("Could not find a route between these points");
-                    return;
-                  }
-                  setRoutePath(route.path);
-                  setRouteSummary({
-                    distance: route.distance,
-                    duration: route.duration,
-                    startLabel: start.label || startQuery,
-                    destLabel: dest.label || destQuery,
-                  });
-                }}
-              >
-                Get Directions
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+              <button className="w-full py-4 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                Start Navigation
               </button>
+            </div>
+
+            {/* Optional placeholder for step-by-step directions if enabled later */}
+            <div className="flex-1 overflow-y-auto no-scrollbar">
+              {/* Steps would go here */}
             </div>
           </div>
-
-          {routeSummary && (
-            <div className="mt-4 bg-dark-800/50 border border-white/5 rounded-xl p-4 space-y-2 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-brand-500 to-accent-500"></div>
-
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="text-2xl font-bold text-white leading-none">
-                    {(routeSummary.duration / 60).toFixed(0)} <span className="text-sm font-normal text-gray-400">min</span>
-                  </div>
-                  <div className="text-sm text-gray-400 font-medium mt-0.5">
-                    {(routeSummary.distance / 1000).toFixed(1)} km
-                  </div>
-                </div>
-                <div className="bg-brand-500/20 text-brand-300 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
-                  Fastest
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-white/5 flex items-center gap-2 text-xs text-gray-500">
-                <span className="truncate max-w-[100px]">{routeSummary.startLabel}</span>
-                <span>→</span>
-                <span className="truncate max-w-[100px]">{routeSummary.destLabel}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        ) : (
+          <div className="px-6 flex-1 flex flex-col justify-center items-center opacity-30 pointer-events-none pb-20">
+            <svg className="w-24 h-24 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            <p className="text-lg font-bold text-gray-300">Enter locations</p>
+            <p className="text-sm text-gray-400 text-center mt-1">Search for a starting point and destination to see your route options.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
