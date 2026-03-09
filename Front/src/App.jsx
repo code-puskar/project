@@ -11,7 +11,7 @@ import IssueDrawer from "./components/IssueDrawer";
 import Landing from "./pages/Landing";
 
 import { Routes, Route } from "react-router-dom";
-import AdminLayout from "./pages/Admin/AdminLayout";
+import AdminLayout from "./pages/admin/AdminLayout";
 
 function MainApp({
   showLanding, setShowLanding,
