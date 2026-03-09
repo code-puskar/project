@@ -222,7 +222,8 @@ export default function DeckMap({
       <DeckGL
         controller={{
           scrollZoom: true,
-          dragRotate: show3D,
+          dragRotate: true,
+          touchRotate: true,
           doubleClickZoom: true,
           dragPan: true,
           touchZoom: true,

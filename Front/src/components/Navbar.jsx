@@ -62,11 +62,11 @@ export default function Navbar({
   };
 
   return (
-    <header className="fixed top-4 left-4 right-4 md:top-0 md:left-0 md:right-0 z-50 transition-all duration-300">
-      {/* Background shape: Pill on mobile, edge-to-edge on desktop */}
-      <div className="absolute inset-0 bg-dark-900 shadow-xl border border-white/10 rounded-2xl md:bg-dark-900/80 md:backdrop-blur-md md:border-b md:border-white/10 md:shadow-lg md:rounded-none md:supports-[backdrop-filter]:bg-dark-900/60"></div>
+    <header className="fixed top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 lg:left-1/2 lg:-translate-x-1/2 lg:w-[calc(100%-3rem)] lg:max-w-7xl z-50 transition-all duration-300">
+      {/* Background shape: Pill on all devices */}
+      <div className="absolute inset-0 bg-dark-900 shadow-xl border border-white/10 rounded-2xl md:bg-dark-900/80 md:backdrop-blur-md md:border md:border-white/10 md:shadow-lg md:rounded-2xl md:supports-[backdrop-filter]:bg-dark-900/60"></div>
 
-      <div className="relative mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2 md:gap-4">
+      <div className="relative mx-auto w-full px-3 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2 md:gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
