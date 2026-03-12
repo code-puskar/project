@@ -23,7 +23,7 @@ const steps = [
 
 export default function ScrollStory() {
     return (
-        <section className="relative py-28 md:py-36 px-6 bg-[#0a0f1f] overflow-hidden">
+        <section className="relative py-28 md:py-36 px-6 overflow-hidden">
             {/* Abstract shapes */}
             <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[150px] pointer-events-none -translate-y-1/2" />
 

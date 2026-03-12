@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function Footer() {
     return (
-        <footer className="relative py-28 md:py-36 px-6 bg-[#060918] overflow-hidden">
+        <footer className="relative py-28 md:py-36 px-6 overflow-hidden">
             {/* Abstract glow */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/5 rounded-full blur-[150px] pointer-events-none" />
 

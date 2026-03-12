@@ -33,7 +33,7 @@ const colorMap = {
 
 export default function StatsBar() {
     return (
-        <section className="relative py-28 md:py-36 px-6 bg-[#0a0f1f] overflow-hidden">
+        <section className="relative py-28 md:py-36 px-6 overflow-hidden">
             {/* Abstract shapes */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none" />
 

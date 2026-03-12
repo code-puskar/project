@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function Hero({ onOpenLogin, onOpenRegister }) {
     return (
-        <section className="relative min-h-screen bg-[#060918] flex flex-col items-center justify-center px-6 overflow-hidden">
+        <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
 
             {/* Abstract background shapes */}
             <div className="absolute top-[-20%] right-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />

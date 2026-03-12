@@ -48,7 +48,7 @@ const colorMap = {
 
 export default function FeaturesBento() {
     return (
-        <section className="relative py-28 md:py-36 px-6 bg-[#060918] overflow-hidden">
+        <section className="relative py-28 md:py-36 px-6 overflow-hidden">
             {/* Abstract glow */}
             <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-[150px] pointer-events-none" />
 
