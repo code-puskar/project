@@ -6,6 +6,11 @@ import ScrollStory from "../components/landing/ScrollStory";
 import StatsBar from "../components/landing/StatsBar";
 import Footer from "../components/landing/Footer";
 import LightPillar from "../components/landing/LightPillar";
+import FeatureColumns from "../components/landing/FeatureColumns";
+import CTASection from "../components/landing/CTASection";
+import AboutSection from "../components/landing/AboutSection";
+import ContactSection from "../components/landing/ContactSection";
+import FaqSection from "../components/landing/FaqSection";
 
 export default function Landing({ onOpenLogin, onOpenRegister }) {
     return (
@@ -44,8 +49,13 @@ export default function Landing({ onOpenLogin, onOpenRegister }) {
             <div style={{ position: "relative", zIndex: 1 }}>
                 <Hero onOpenLogin={onOpenLogin} onOpenRegister={onOpenRegister} />
                 <StatsBar />
-                <FeaturesBento />
+                <FeatureColumns />
+                <CTASection onOpenLogin={onOpenLogin} onOpenRegister={onOpenRegister} />
                 <ScrollStory />
+                <AboutSection />
+                <ContactSection />
+                <FaqSection />
+                <FeaturesBento />
                 <Footer />
             </div>
         </div>

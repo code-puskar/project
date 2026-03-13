@@ -39,20 +39,20 @@ export default function Hero({ onOpenLogin, onOpenRegister }) {
                     className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 backdrop-blur-sm mb-8"
                 >
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                    <span className="text-xs font-bold text-blue-300 tracking-wider uppercase">Civic Intelligence Suite</span>
+                    <span className="text-xs font-bold text-blue-300 tracking-wider uppercase">Smart Road Issue Reporting</span>
                 </motion.div>
 
                 <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
                     className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.95]"
                 >
-                    The Brains of{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400">Modern Cities</span>
+                    Smart Road Issue{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400">Reporting System</span>
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
                     className="text-base sm:text-lg md:text-xl text-blue-200/50 max-w-2xl font-light mb-12 leading-relaxed"
                 >
-                    Report, track, and resolve infrastructure issues instantly. True transparency through the synergy of <strong className="text-blue-200/80 font-semibold">AI</strong> and <strong className="text-blue-200/80 font-semibold">community data</strong>.
+                    Large, high-contrast hero built for civic teams. Report road hazards in seconds, see them plotted on live maps, and keep the whole community in the loop with transparent status updates.
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
@@ -60,9 +60,10 @@ export default function Hero({ onOpenLogin, onOpenRegister }) {
                 >
                     <button onClick={(e) => { e.preventDefault(); onOpenRegister(); }}
                         className="px-8 py-4 rounded-2xl font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-xl shadow-blue-600/20 hover:-translate-y-1 "
-                    >Unite your City</button>
-                    <button className="px-8 py-4 rounded-2xl font-bold bg-white/5 text-blue-100 border border-white/10 backdrop-blur-md hover:bg-white/10 transition-all flex items-center justify-center gap-3">
-                        Explore Platform
+                    >Report an Issue</button>
+                    <button onClick={(e) => { e.preventDefault(); onOpenLogin?.(); }}
+                        className="px-8 py-4 rounded-2xl font-bold bg-white/5 text-blue-100 border border-white/10 backdrop-blur-md hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+                        View City Map
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                     </button>
                 </motion.div>
