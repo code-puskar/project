@@ -5,6 +5,8 @@ from datetime import datetime
 from app.dependencies.auth import get_current_user
 from app.database import issues_collection, users_collection
 from app.schemas.issue import IssueCreate
+from app.utils.ai_validator import validate_issue_content
+
 
 
 from app.utils.constants import (
@@ -49,6 +51,14 @@ def create_issue(
             detail="A similar issue already exists nearby"
         )
 
+    # AI Validation
+    is_valid, reason = validate_issue_content(issue.description, issue.issue_type)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"AI Monitor: {reason}"
+        )
+
     issues_collection.insert_one({
         "issue_type": issue.issue_type,
         "description": issue.description,
@@ -62,6 +72,7 @@ def create_issue(
         "validated_by": [],
         "created_at": datetime.utcnow()
     })
+
 
     return {"message": "Issue reported successfully"}
 
