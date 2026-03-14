@@ -341,23 +341,47 @@ export default function DeckMap({
 
         {tooltip && tooltip.object && (
           <div
+            className="animate-in fade-in slide-in-from-top-1 duration-200"
             style={{
               position: "absolute",
-              left: tooltip.x + 10,
-              top: tooltip.y + 10,
-              background: "white",
-              padding: 8,
-              borderRadius: 6,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+              left: tooltip.x + 16,
+              top: tooltip.y + 16,
+              background: "rgba(11, 15, 25, 0.9)", // dark-900 with opacity
+              backdropFilter: "blur(12px)",
+              padding: "16px",
+              borderRadius: "20px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
               pointerEvents: "none",
-              zIndex: 999,
+              zIndex: 9999,
+              maxWidth: "280px",
+              color: "white"
             }}
           >
-            <strong>{tooltip.object.issue_type}</strong>
-            <div style={{ fontSize: 12 }}>{tooltip.object.description}</div>
-            <div style={{ fontSize: 11, color: "#666" }}>Status: {tooltip.object.status}</div>
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <div 
+                className={`w-3 h-3 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)] ${
+                  tooltip.object.status === "Verified" ? "bg-[#10b981]" : "bg-[#3b82f6]"
+                }`} 
+              />
+              <strong className="text-sm font-bold tracking-tight text-white uppercase opacity-90">
+                {tooltip.object.issue_type}
+              </strong>
+            </div>
+            
+            <div className="text-xs text-gray-300 leading-relaxed font-medium mb-3 line-clamp-3">
+              {tooltip.object.description}
+            </div>
+            
+            <div className="flex items-center justify-between pt-3 border-t border-white/5 uppercase tracking-[0.15em] font-black text-[9px]">
+              <span className="text-gray-500">Status</span>
+              <span className={tooltip.object.status === "Verified" ? "text-accent-500" : "text-brand-500"}>
+                {tooltip.object.status}
+              </span>
+            </div>
           </div>
         )}
+
 
       </DeckGL>
     </div>
