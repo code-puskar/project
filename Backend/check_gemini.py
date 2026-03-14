@@ -9,10 +9,10 @@ url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash
 
 payload = {
     "contents": [{
-        "parts": [{"text": "Say hello"}]
+        "parts": [{"text": "Say hello in one word"}]
     }]
 }
 
 response = requests.post(url, json=payload)
 print(f"Status: {response.status_code}")
-print(f"Response: {response.text}")
+print(f"Response: {response.text[:300]}")

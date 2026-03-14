@@ -60,8 +60,6 @@ or
         return is_valid, reason
 
     except Exception as e:
-        print(f"AI Validation Error: {e}")
-        import traceback
-        traceback.print_exc()
-        # Default to True on API error to avoid blocking users
+        print(f"AI Validation Error (Fail-safe active): {e}")
+        # Default to True on API error or quota limit to avoid blocking users
         return True, ""

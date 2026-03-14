@@ -34,6 +34,7 @@ def create_issue(
 ):
     existing_issue = issues_collection.find_one({
         "status": "Active",
+        "issue_type": issue.issue_type,
         "location": {
             "$near": {
                 "$geometry": {
@@ -44,6 +45,7 @@ def create_issue(
             }
         }
     })
+
 
     if existing_issue:
         raise HTTPException(
