@@ -1,60 +1,67 @@
-import google.generativeai as genai
+from google import genai
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini
+# Configure Gemini client
 api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key) if api_key else None
+
 
 def validate_issue_content(description: str, issue_type: str) -> tuple[bool, str]:
     """
     Validates if the provided description is a relevant road/city issue.
     Returns (is_valid, reason)
     """
-    if not api_key:
-        # Fallback if API key is missing during dev
+    if not client:
         print("Warning: GEMINI_API_KEY not found. Skipping AI validation.")
         return True, ""
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        
+        print(f"DEBUG: Validating issue - Type: {issue_type}, Desc: {description}")
+
         prompt = f"""
-        You are an AI monitor for a "Smart City Road Issue Reporting" app.
-        Your task is to verify if a user's report is relevant and helpful.
-        
-        Report Category: {issue_type}
-        User Description: "{description}"
-        
-        Rules for relevance:
-        1. It must be related to city infrastructure (roads, potholes, garbage, streetlights, water leakage, etc.).
-        2. It should not be random gibberish, test text (like "asdf"), or offensive content.
-        3. It should not be a general greeting or unrelated chat.
-        4. If the category is "Other", use common sense to see if it fits a city maintenance context.
-        
-        Respond ONLY in JSON format:
-        {{
-          "is_valid": true/false,
-          "reason": "Brief explanation if false, otherwise empty"
-        }}
-        """
-        
-        response = model.generate_content(prompt)
-        # Handle cases where response might be wrapped in ```json ... ```
+Analyze if the following report is a RELEVANT and DESCRIPTIVE road/city issue.
+
+Category: {issue_type}
+Description: "{description}"
+
+STRICT VALIDATION RULES:
+1. RELEVANCE: Is this about city infrastructure? (potholes, garbage, lighting, etc.)
+2. GIBBERISH: Is the description random letters, keyboard smashing (e.g., "hgghwefe", "asdf"), or nonsensical? If YES, is_valid = false.
+3. BREVITY: Is the description too short to be useful (e.g., "hi", "ok", "test")? If YES, is_valid = false.
+4. ACCURACY: If category is "Pothole" but description is "I like pizza", is_valid = false.
+
+Return ONLY valid JSON, no markdown:
+{{"is_valid": true, "reason": ""}}
+or
+{{"is_valid": false, "reason": "reason here"}}
+"""
+
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
         text = response.text.strip()
+        print(f"DEBUG: AI Response: {text}")
+
+        # Basic JSON cleanup
         if "```json" in text:
             text = text.split("```json")[1].split("```")[0].strip()
         elif "```" in text:
             text = text.split("```")[1].split("```")[0].strip()
-            
-        import json
+
         result = json.loads(text)
-        return result.get("is_valid", True), result.get("reason", "")
-        
+        is_valid = result.get("is_valid", True)
+        reason = result.get("reason", "")
+        print(f"DEBUG: Result - Valid: {is_valid}, Reason: {reason}")
+        return is_valid, reason
+
     except Exception as e:
         print(f"AI Validation Error: {e}")
-        # Default to True on API error to avoid blocking users if service is down
+        import traceback
+        traceback.print_exc()
+        # Default to True on API error to avoid blocking users
         return True, ""

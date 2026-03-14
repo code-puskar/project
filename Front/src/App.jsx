@@ -229,10 +229,10 @@ function AppWrapper() {
       refreshIssues();
     } catch (err) {
       console.error("Failed to submit issue", err);
-      const serverDetail = err.response?.data?.detail || err.response?.data || err.message;
-      alert("Could not submit issue: " + JSON.stringify(serverDetail));
+      throw err; // Re-throw so the modal can catch and display the error
     }
   };
+
 
   const refreshIssues = async () => {
     try {
