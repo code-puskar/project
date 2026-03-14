@@ -41,9 +41,6 @@ export default function MapView({
   const [geoError, setGeoError] = useState(null);
   const hasCenteredRef = useRef(false);
 
-  const [manualPosition, setManualPosition] = useState(null);
-  const [showOverridePrompt, setShowOverridePrompt] = useState(false);
-  const [lastSelectedCoord, setLastSelectedCoord] = useState(null);
 
   const token = localStorage.getItem("access_token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -344,18 +341,14 @@ export default function MapView({
           routePath={routePath}
           onUserInteract={() => setFollowUser(false)}
           onMapClick={(latlng) => {
-            setLastSelectedCoord(latlng);
-            setShowOverridePrompt(true);
-
-            const activePosition = manualPosition || (position ? { lat: position[0], lng: position[1] } : null);
-
-            if (activePosition) {
-              const dist = getDistanceInMeters(activePosition.lat, activePosition.lng, latlng.lat, latlng.lng);
+            if (position) {
+              const dist = getDistanceInMeters(position[0], position[1], latlng.lat, latlng.lng);
               if (dist > 300) {
                 addNotification(`You can only report issues within 300m of your location. (Distance: ${Math.round(dist)}m)`);
                 return;
               }
             }
+
 
 
             if (Object.hasOwn(latlng, "isRoad") && !latlng.isRoad) {
@@ -456,70 +449,13 @@ export default function MapView({
         </div>
       </div>
 
-      {geoError && !manualPosition && (
+      {geoError && (
         <div className="absolute bottom-24 left-4 z-50 bg-red-600/90 backdrop-blur text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-red-500/50">
           {geoError}
         </div>
       )}
 
-      {/* 📍 Manual Location Overide Prompt */}
-      {showOverridePrompt && lastSelectedCoord && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[55] w-[90%] max-w-sm bg-dark-900 shadow-2xl rounded-2xl border border-brand-500/30 overflow-hidden animate-in fade-in slide-in-from-top-4">
-          <div className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-white leading-tight">Location Inaccurate?</p>
-              <p className="text-[10px] text-gray-400">If your GPS is wrong, set this as your current spot to report nearby issues.</p>
-            </div>
-          </div>
-          <div className="flex border-t border-white/5">
-            <button
-              onClick={() => setShowOverridePrompt(false)}
-              className="flex-1 py-3 text-xs font-semibold text-gray-400 hover:bg-white/5 transition-colors"
-            >
-              Skip
-            </button>
-            <button
-              onClick={() => {
-                setManualPosition(lastSelectedCoord);
-                setShowOverridePrompt(false);
-                setPosition([lastSelectedCoord.lat, lastSelectedCoord.lng]);
-                addNotification("📍 Reference location updated manually.");
-              }}
-              className="flex-1 py-3 text-xs font-bold text-brand-400 hover:bg-brand-500/10 transition-colors border-l border-white/5"
-            >
-              Set as My Location
-            </button>
-          </div>
-        </div>
-      )}
 
-      {manualPosition && (
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-brand-500 text-white text-[10px] sm:text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-brand-500/30 border border-brand-400/50 backdrop-blur-md">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
-          MANUAL LOCATION OVERRIDE ACTIVE
-          <button 
-            onClick={() => {
-              setManualPosition(null);
-              // Force a fresh GPS check if possible
-              if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                  setPosition([pos.coords.latitude, pos.coords.longitude]);
-                });
-              }
-            }}
-            className="ml-2 pl-2 border-l border-white/20 hover:text-white/80 transition-colors"
-          >
-            RESET
-          </button>
-        </div>
-      )}
 
 
       {/* 🗺️ Sliding Route Planner Drawer */}
