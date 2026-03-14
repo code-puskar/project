@@ -8,5 +8,6 @@ pydantic[email]
 Pillow
 requests
 python-multipart
-google-generativeai
+google-genai
+
 

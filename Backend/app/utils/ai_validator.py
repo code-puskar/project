@@ -13,30 +13,47 @@ client = genai.Client(api_key=api_key) if api_key else None
 
 def is_obvious_gibberish(text: str) -> tuple[bool, str]:
     """
-    Deterministic check for obvious gibberish/non-descriptive text.
-    Returns (is_gibberish, reason)
+    Advanced deterministic check for gibberish/non-descriptive text.
+    Uses character distribution and linguistic heuristics.
     """
     text = text.strip()
+    original_text = text
+    text_lower = text.lower()
     
     # 1. Extremely short
     if len(text) < 5:
-        return True, "Description is too short to be descriptive."
-        
-    # 2. Keyboard smashing (long string with no vowels or spaces)
-    if " " not in text and len(text) > 8:
-        vowels = re.findall(r'[aeiouAEIOU]', text)
-        if len(vowels) == 0:
-            return True, "Invalid input (keyboard smashing detected)."
-            
-    # 3. Repeating characters (e.g., "aaaaa" or "11111")
-    if re.search(r'(.)\1{4,}', text):
-        return True, "Invalid input (repeating characters detected)."
-        
-    # 4. Purely non-alphanumeric (e.g., "!!!!!" or ".....")
-    if not re.search(r'[a-zA-Z0-9]', text):
-        return True, "Description must contain letters or numbers."
+        return True, "Description is too short. Please provide more detail."
+
+    # 2. Keyboard smashing / Consecutive Consonants
+    # We treat 'y' as a semi-vowel here to be safe
+    if re.search(r'[^aeiouy\s]{5,}', text_lower):
+        return True, "Invalid input (suspicious character sequence detected)."
+
+    # 3. Vowel Density Check
+    vowels = re.findall(r'[aeiouy]', text_lower)
+    vowel_count = len(vowels)
+    if len(text) > 6:
+        vowel_ratio = vowel_count / len(text)
+        # English usually has > 25% vowels. We'll be lenient and use 15%.
+        if vowel_ratio < 0.15 and " " not in text:
+            return True, "Invalid input (seems like random characters)."
+
+    # 4. Space Distribution
+    # If a long string has no spaces, it's likely gibberish
+    if len(text) > 12 and " " not in text:
+        return True, "Invalid input (please use spaces between words)."
+
+    # 5. Repeating characters
+    if re.search(r'(.)\1{3,}', text_lower):
+        return True, "Invalid input (excessive repeating characters)."
+
+    # 6. Low alphanumeric content
+    alnum_ratio = len(re.findall(r'[a-zA-Z0-9]', text)) / len(text)
+    if alnum_ratio < 0.5:
+        return True, "Invalid input (too many symbols/special characters)."
 
     return False, ""
+
 
 
 def validate_issue_content(description: str, issue_type: str) -> tuple[bool, str]:
