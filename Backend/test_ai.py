@@ -6,7 +6,9 @@ test_cases = [
     ("Other", "asdf 123"),
     ("Garbage", "There is a pile of trash near the park entrance."),
     ("Streetlight", "hello how are you"),
+    ("Water", "i love dogs"),
 ]
+
 
 for issue_type, desc in test_cases:
     print(f"\n{'='*50}")

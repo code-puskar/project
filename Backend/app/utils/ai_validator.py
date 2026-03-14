@@ -1,25 +1,25 @@
-from google import genai
 import os
 import json
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini client
-api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
+# OpenRouter Configuration
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+MODEL = "google/gemini-2.0-flash-001"
 
 
 def validate_issue_content(description: str, issue_type: str) -> tuple[bool, str]:
     """
-    Validates if the provided description is a relevant road/city issue using ONLY AI.
+    Validates if the provided description is a relevant road/city issue using OpenRouter (strictly AI).
     """
-    if not client:
-        print("Warning: GEMINI_API_KEY not found. Skipping AI validation.")
+    if not OPENROUTER_API_KEY:
+        print("Warning: OPENROUTER_API_KEY not found. Skipping AI validation.")
         return True, ""
 
     try:
-        print(f"DEBUG: AI Validating issue - Type: {issue_type}, Desc: {description}")
+        print(f"DEBUG: AI Validating issue via OpenRouter - Type: {issue_type}, Desc: {description}")
 
         prompt = f"""
 Analyze if the following report is a RELEVANT and DESCRIPTIVE road/city issue.
@@ -39,11 +39,26 @@ Return ONLY valid JSON:
 {{"is_valid": true, "reason": ""}} or {{"is_valid": false, "reason": "reason here"}}
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            data=json.dumps({
+                "model": MODEL,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "response_format": {"type": "json_object"}
+            })
         )
-        text = response.text.strip()
+        
+        if response.status_code != 200:
+            raise Exception(f"OpenRouter Error: {response.status_code} - {response.text}")
+
+        data = response.json()
+        text = data['choices'][0]['message']['content'].strip()
         
         # Basic JSON cleanup
         if "```json" in text:
@@ -62,12 +77,11 @@ Return ONLY valid JSON:
         print(f"AI Service Error: {error_msg}")
         
         # PRODUCTION STANDARD: Strictly rely on AI. 
-        # If AI is hitting quota (429) or forbidden (403), we block the post 
-        # to ensure junk never passes during downtime.
-        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-            return False, "Validation system is currently busy (Quota reached). Please try again in 1 minute."
+        if "429" in error_msg:
+            return False, "Validation system is currently busy. Please try again in 1 minute."
         
-        return False, "Validation system temporarily unavailable. Please try again later."
+        return False, f"Validation system unavailable. ({error_msg[:50]})"
+
 
 
 
