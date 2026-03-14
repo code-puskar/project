@@ -1,4 +1,3 @@
-import re
 from google import genai
 import os
 import json
@@ -11,65 +10,12 @@ api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
 
-def is_obvious_gibberish(text: str) -> tuple[bool, str]:
-    """
-    Advanced deterministic check for gibberish/non-descriptive text.
-    Uses character distribution and linguistic heuristics.
-    """
-    text = text.strip()
-    original_text = text
-    text_lower = text.lower()
-    
-    # 1. Extremely short
-    if len(text) < 5:
-        return True, "Description is too short. Please provide more detail."
-
-    # 2. Keyboard smashing / Consecutive Consonants
-    # We treat 'y' as a semi-vowel here to be safe
-    if re.search(r'[^aeiouy\s]{5,}', text_lower):
-        return True, "Invalid input (suspicious character sequence detected)."
-
-    # 3. Vowel Density Check
-    vowels = re.findall(r'[aeiouy]', text_lower)
-    vowel_count = len(vowels)
-    if len(text) > 6:
-        vowel_ratio = vowel_count / len(text)
-        # English usually has > 25% vowels. We'll be lenient and use 15%.
-        if vowel_ratio < 0.15 and " " not in text:
-            return True, "Invalid input (seems like random characters)."
-
-    # 4. Space Distribution
-    # If a long string has no spaces, it's likely gibberish
-    if len(text) > 12 and " " not in text:
-        return True, "Invalid input (please use spaces between words)."
-
-    # 5. Repeating characters
-    if re.search(r'(.)\1{3,}', text_lower):
-        return True, "Invalid input (excessive repeating characters)."
-
-    # 6. Low alphanumeric content
-    alnum_ratio = len(re.findall(r'[a-zA-Z0-9]', text)) / len(text)
-    if alnum_ratio < 0.5:
-        return True, "Invalid input (too many symbols/special characters)."
-
-    return False, ""
-
-
-
 def validate_issue_content(description: str, issue_type: str) -> tuple[bool, str]:
     """
-    Validates if the provided description is a relevant road/city issue.
-    Uses a hybrid approach: Local Pre-validation + AI Verification.
+    Validates if the provided description is a relevant road/city issue using ONLY AI.
     """
-    # Step 1: Local Pre-validation (Failsafe & Speed)
-    is_gibberish, reason = is_obvious_gibberish(description)
-    if is_gibberish:
-        print(f"DEBUG: Local Validator blocked input: {reason}")
-        return False, reason
-
-    # Step 2: AI Verification (Gemini)
     if not client:
-        print("Warning: GEMINI_API_KEY not found. Skipping AI verification (Local validation passed).")
+        print("Warning: GEMINI_API_KEY not found. Skipping AI validation.")
         return True, ""
 
     try:
@@ -83,9 +29,11 @@ Description: "{description}"
 
 STRICT VALIDATION RULES:
 1. RELEVANCE: Is this about city infrastructure? (potholes, garbage, lighting, etc.)
-2. GIBBERISH: Is the description random letters or nonsensical? If YES, is_valid = false.
+2. GIBBERISH: Is the description random letters, keyboard smashing, or nonsensical? If YES, is_valid = false.
 3. BREVITY: Is the description too short/vague to be useful? If YES, is_valid = false.
-4. ACCURACY: If category is "Pothole" but description is unrelated, is_valid = false.
+4. ACCURACY: If the category is unrelated to the description (e.g., Category: Water, Desc: "I love dogs"), is_valid = false.
+
+IMPORTANT: "I love dogs", "Hello world", "Buy pizza" are UNRELATED and should be results in is_valid: false.
 
 Return ONLY valid JSON:
 {{"is_valid": true, "reason": ""}} or {{"is_valid": false, "reason": "reason here"}}
@@ -104,11 +52,22 @@ Return ONLY valid JSON:
             text = text.split("```")[1].split("```")[0].strip()
 
         result = json.loads(text)
-        return result.get("is_valid", True), result.get("reason", "")
+        is_valid = result.get("is_valid", True)
+        reason = result.get("reason", "")
+        print(f"DEBUG: AI Result - Valid: {is_valid}, Reason: {reason}")
+        return is_valid, reason
 
     except Exception as e:
-        print(f"AI Service Error: {e}")
-        # Default to True on API error because Local Pre-validation already passed
-        # This prevents blocking users if Gemini is down/quota-limited.
-        return True, ""
+        error_msg = str(e)
+        print(f"AI Service Error: {error_msg}")
+        
+        # PRODUCTION STANDARD: Strictly rely on AI. 
+        # If AI is hitting quota (429) or forbidden (403), we block the post 
+        # to ensure junk never passes during downtime.
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            return False, "Validation system is currently busy (Quota reached). Please try again in 1 minute."
+        
+        return False, "Validation system temporarily unavailable. Please try again later."
+
+
 
