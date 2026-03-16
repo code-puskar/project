@@ -460,25 +460,25 @@ export default function MapView({
 
       {/* 🗺️ Sliding Route Planner Drawer */}
       <div
-        className={`absolute top-[72px] md:top-[88px] bottom-0 left-0 w-full md:w-[400px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[45] rounded-tr-3xl flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
+        className={`absolute top-[72px] md:top-[80px] bottom-0 left-0 w-full md:w-[340px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[45] rounded-tr-3xl flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
             ${routeOpen ? "translate-x-0" : "-translate-x-full"}
          `}
       >
-        {/* Header Options */}
-        <div className="flex items-center justify-between p-6 pb-2">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setRouteOpen(false)}
-              className="p-2 -ml-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 -ml-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
               title="Close Navigation"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </button>
-            <h2 className="text-xl font-bold tracking-tight">Plan Route</h2>
+            <h2 className="text-lg font-bold tracking-tight">Plan Route</h2>
           </div>
 
           <button
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
             onClick={() => {
               setStartLocation(null);
               setDestLocation(null);
@@ -495,134 +495,136 @@ export default function MapView({
           </button>
         </div>
 
-        <div className="px-6 py-4 flex gap-4 relative">
-          {/* Left Timeline Guide */}
-          <div className="flex flex-col items-center mt-3 pb-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-brand-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"></div>
-            <div className="w-[1.5px] flex-1 border-l-[1.5px] border-dashed border-gray-600 my-1"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-accent-500 shadow-[0_0_10px_rgba(168,85,247,0.5)] z-10"></div>
-          </div>
-
-          {/* Inputs Area */}
-          <div className="flex-1 space-y-3 relative">
-
-            {/* Swap Button inside center right */}
-            <button
-              onClick={handleSwapLocations}
-              className="absolute right-2 top-11 z-[50] w-8 h-8 flex items-center justify-center bg-dark-800 border border-white/10 rounded-full text-gray-400 hover:text-brand-400 hover:bg-white/10 shadow-lg transition-colors group"
-              title="Swap Locations"
-            >
-              <svg className="w-4 h-4 transform group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
-            </button>
-
-            {/* Start Input */}
-            <div className="relative group">
-              <input
-                className="w-full pr-10 pl-4 py-3.5 rounded-2xl bg-dark-800 border border-transparent text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-700 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50 transition-all font-medium"
-                placeholder="Choose start location..."
-                value={startQuery}
-                onChange={(e) => {
-                  setStartQuery(e.target.value);
-                  fetchSuggestions(e.target.value, setStartSuggestions);
-                }}
-              />
-              {/* Suggestions List */}
-              {startSuggestions.length > 0 && (
-                <div className="absolute z-[100] left-0 right-0 top-full mt-2 bg-dark-800 border border-white/10 rounded-2xl shadow-2xl max-h-[300px] overflow-y-auto custom-scrollbar">
-                  {position && (
-                    <button
-                      className="w-full text-left px-5 py-4 hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-3"
-                      onClick={async () => {
-                        const posName = await getCurrentLocationName();
-                        setStartQuery(posName);
-                        setStartLocation({ lat: position[0], lng: position[1], label: posName });
-                        setStartSuggestions([]);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
-                      </div>
-                      <div>
-                        <div className="text-brand-400 font-semibold text-sm">Your Current Location</div>
-                        <div className="text-gray-500 text-xs mt-0.5">Use GPS</div>
-                      </div>
-                    </button>
-                  )}
-                  {startSuggestions.map((s, idx) => (
-                    <button
-                      key={idx}
-                      className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-3"
-                      onClick={() => {
-                        setStartQuery(s.mainText);
-                        setStartLocation({ lat: s.lat, lng: s.lng, label: s.label });
-                        setStartSuggestions([]);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400">
-                        {s.types?.includes("poi") ? "📍" : "🗺️"}
-                      </div>
-                      <div className="truncate">
-                        <div className="text-gray-200 font-semibold text-sm truncate">{s.mainText}</div>
-                        <div className="text-gray-500 text-xs truncate mt-0.5">{s.subText}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+        {/* Route Inputs */}
+        <div className="px-5 pb-4">
+          <div className="flex items-stretch gap-3">
+            {/* Left: Dots + Dashed Line */}
+            <div className="flex flex-col items-center py-4 shrink-0">
+              <div className="w-3 h-3 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] z-10"></div>
+              <div className="w-[1.5px] flex-1 border-l-[1.5px] border-dashed border-gray-600 my-0.5"></div>
+              <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] z-10"></div>
             </div>
 
-            {/* Destination Input */}
-            <div className="relative group">
-              <input
-                className="w-full pr-10 pl-4 py-3.5 rounded-2xl bg-dark-800 border border-transparent text-sm text-white placeholder-gray-500 focus:outline-none focus:bg-dark-700 focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all font-medium"
-                placeholder="Choose destination..."
-                value={destQuery}
-                onChange={(e) => {
-                  setDestQuery(e.target.value);
-                  fetchSuggestions(e.target.value, setDestSuggestions);
-                }}
-              />
-              {/* Suggestions List */}
-              {destSuggestions.length > 0 && (
-                <div className="absolute z-[100] left-0 right-0 top-full mt-2 bg-dark-800 border border-white/10 rounded-2xl shadow-2xl max-h-[300px] overflow-y-auto custom-scrollbar">
-                  {destSuggestions.map((s, idx) => (
-                    <button
-                      key={idx}
-                      className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-3"
-                      onClick={() => {
-                        setDestQuery(s.mainText);
-                        setDestLocation({ lat: s.lat, lng: s.lng, label: s.label });
-                        setDestSuggestions([]);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400">
-                        {s.types?.includes("poi") ? "📍" : "🗺️"}
-                      </div>
-                      <div className="truncate">
-                        <div className="text-gray-200 font-semibold text-sm truncate">{s.mainText}</div>
-                        <div className="text-gray-500 text-xs truncate mt-0.5">{s.subText}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Center: Inputs */}
+            <div className="flex-1 space-y-2 min-w-0">
+              {/* Start Input */}
+              <div className="relative">
+                <input
+                  className="w-full pl-3 pr-3 py-3 rounded-xl bg-dark-800 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all"
+                  placeholder="Choose start location..."
+                  value={startQuery}
+                  onChange={(e) => {
+                    setStartQuery(e.target.value);
+                    fetchSuggestions(e.target.value, setStartSuggestions);
+                  }}
+                />
+                {startSuggestions.length > 0 && (
+                  <div className="absolute z-[100] left-0 right-0 top-full mt-1.5 bg-dark-800 border border-white/10 rounded-xl shadow-2xl max-h-[250px] overflow-y-auto custom-scrollbar">
+                    {position && (
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-2.5"
+                        onClick={async () => {
+                          const posName = await getCurrentLocationName();
+                          setStartQuery(posName);
+                          setStartLocation({ lat: position[0], lng: position[1], label: posName });
+                          setStartSuggestions([]);
+                        }}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+                        </div>
+                        <div>
+                          <div className="text-brand-400 font-semibold text-xs">Your Current Location</div>
+                          <div className="text-gray-500 text-[10px]">Use GPS</div>
+                        </div>
+                      </button>
+                    )}
+                    {startSuggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2.5"
+                        onClick={() => {
+                          setStartQuery(s.mainText);
+                          setStartLocation({ lat: s.lat, lng: s.lng, label: s.label });
+                          setStartSuggestions([]);
+                        }}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400 text-xs">
+                          {s.types?.includes("poi") ? "📍" : "🗺️"}
+                        </div>
+                        <div className="truncate">
+                          <div className="text-gray-200 font-medium text-xs truncate">{s.mainText}</div>
+                          <div className="text-gray-500 text-[10px] truncate">{s.subText}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Destination Input */}
+              <div className="relative">
+                <input
+                  className="w-full pl-3 pr-3 py-3 rounded-xl bg-dark-800 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all"
+                  placeholder="Choose destination..."
+                  value={destQuery}
+                  onChange={(e) => {
+                    setDestQuery(e.target.value);
+                    fetchSuggestions(e.target.value, setDestSuggestions);
+                  }}
+                />
+                {destSuggestions.length > 0 && (
+                  <div className="absolute z-[100] left-0 right-0 top-full mt-1.5 bg-dark-800 border border-white/10 rounded-xl shadow-2xl max-h-[250px] overflow-y-auto custom-scrollbar">
+                    {destSuggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2.5"
+                        onClick={() => {
+                          setDestQuery(s.mainText);
+                          setDestLocation({ lat: s.lat, lng: s.lng, label: s.label });
+                          setDestSuggestions([]);
+                        }}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gray-800 flex shrink-0 items-center justify-center text-gray-400 text-xs">
+                          {s.types?.includes("poi") ? "📍" : "🗺️"}
+                        </div>
+                        <div className="truncate">
+                          <div className="text-gray-200 font-medium text-xs truncate">{s.mainText}</div>
+                          <div className="text-gray-500 text-[10px] truncate">{s.subText}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Swap Button */}
+            <div className="flex items-center shrink-0">
+              <button
+                onClick={handleSwapLocations}
+                className="w-8 h-8 flex items-center justify-center bg-dark-800 border border-white/10 rounded-full text-gray-400 hover:text-brand-400 hover:bg-white/10 shadow-lg transition-colors group"
+                title="Swap Locations"
+              >
+                <svg className="w-4 h-4 transform group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Route Summary Area */}
+        {/* Route Summary / Empty State */}
         {routePath && routeSummary ? (
-          <div className="px-6 flex-1 flex flex-col pt-4">
-            <div className="bg-gradient-to-br from-brand-900/30 to-accent-900/30 border border-brand-500/20 rounded-3xl p-6 mb-6">
+          <div className="px-5 flex-1 flex flex-col pt-2 overflow-y-auto">
+            <div className="bg-gradient-to-br from-brand-900/30 to-accent-900/30 border border-brand-500/20 rounded-2xl p-5">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <div className="text-gray-400 text-sm font-medium mb-1">Fastest Route</div>
-                  <div className="text-4xl font-black text-white">
-                    {Math.round(routeSummary.duration / 60)} <span className="text-xl text-gray-400 font-semibold">min</span>
+                  <div className="text-gray-400 text-xs font-medium mb-1">Fastest Route</div>
+                  <div className="text-3xl font-black text-white">
+                    {Math.round(routeSummary.duration / 60)} <span className="text-lg text-gray-400 font-semibold">min</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-brand-400 text-xl font-bold">
+                  <div className="text-brand-400 text-lg font-bold">
                     {(routeSummary.distance / 1000).toFixed(1)} <span className="text-sm">km</span>
                   </div>
                 </div>
@@ -630,25 +632,40 @@ export default function MapView({
 
               <button
                 onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${startLocation.lat},${startLocation.lng}&destination=${destLocation.lat},${destLocation.lng}`, '_blank')}
-                className="w-full py-4 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2"
+                className="w-full py-3 bg-brand-500 hover:bg-brand-400 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-sm"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
                 Start Navigation
               </button>
             </div>
-
-            {/* Optional placeholder for step-by-step directions if enabled later */}
-            <div className="flex-1 overflow-y-auto no-scrollbar">
-              {/* Steps would go here */}
-            </div>
           </div>
         ) : (
-          <div className="px-6 flex-1 flex flex-col justify-center items-center opacity-30 pointer-events-none pb-20">
-            <svg className="w-24 h-24 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="px-5 flex-1 flex flex-col justify-center items-center opacity-40 pointer-events-none">
+            <svg className="w-20 h-20 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            <p className="text-lg font-bold text-gray-300">Enter locations</p>
-            <p className="text-sm text-gray-400 text-center mt-1">Search for a starting point and destination to see your route options.</p>
+            <p className="text-base font-bold text-gray-300">Enter locations</p>
+            <p className="text-xs text-gray-400 text-center mt-1 max-w-[200px]">Search for a starting point and destination to see your safest route options.</p>
+          </div>
+        )}
+
+        {/* Bottom CTA Button */}
+        {!routePath && (
+          <div className="px-5 pb-5 pt-3 mt-auto">
+            <button
+              onClick={() => {
+                if (startLocation && destLocation) {
+                  // trigger route calculation if locations are set
+                  const event = new CustomEvent('calculateRoute');
+                  window.dispatchEvent(event);
+                }
+              }}
+              disabled={!startLocation || !destLocation}
+              className="w-full py-3.5 bg-brand-500 hover:bg-brand-400 disabled:bg-dark-800 disabled:text-gray-500 disabled:border disabled:border-white/10 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 disabled:shadow-none transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-sm"
+            >
+              Calculate Best Route
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
           </div>
         )}
       </div>
