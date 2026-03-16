@@ -460,7 +460,7 @@ export default function MapView({
 
       {/* 🗺️ Sliding Route Planner Drawer */}
       <div
-        className={`absolute top-[calc(72px+5px)] md:top-[calc(80px+5px)] bottom-[5px] left-0 w-full md:w-[340px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[45] rounded-tr-3xl rounded-br-3xl flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
+        className={`absolute top-[calc(82px)] md:top-[calc(80px+5px)] bottom-[5px] left-0 w-full md:w-[340px] bg-dark-900/95 backdrop-blur-2xl text-white border-r border-white/10 shadow-2xl z-[45] rounded-tr-3xl rounded-br-3xl flex flex-col transition-transform duration-500 cubic-bezier-[0.32,0.72,0,1]
             ${routeOpen ? "translate-x-0" : "-translate-x-full"}
          `}
       >
