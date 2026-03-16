@@ -11,6 +11,7 @@ router = APIRouter(prefix="/issues", tags=["Issue Images"])
 
 UPLOAD_DIR = "app/uploads/issues"
 MAX_DISTANCE_METERS = 100
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -27,8 +28,8 @@ def upload_issue_image(
     if not issue:
         raise HTTPException(404, "Issue not found")
 
-    # 🔐 Optional: only reporter can upload
-    if issue["user_id"] != current_user["_id"]:
+    # 🔐 Only reporter can upload
+    if issue["user_id"] != current_user["user_id"]:
         raise HTTPException(
             status_code=403,
             detail="Only the issue reporter can upload images"
@@ -39,12 +40,17 @@ def upload_issue_image(
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, "Only image files are allowed")
 
+    # 📏 File size validation
+    contents = file.file.read()
+    if len(contents) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(400, "File size exceeds 10MB limit")
+
     # 💾 Save file
     filename = f"{uuid.uuid4()}.{ext}"
     file_path = os.path.join(UPLOAD_DIR, filename)
 
     with open(file_path, "wb") as f:
-        f.write(file.file.read())
+        f.write(contents)
 
     # 📍 Extract GPS
     gps = extract_gps(file_path)

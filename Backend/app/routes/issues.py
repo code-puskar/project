@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
+import logging
 
 from app.dependencies.auth import get_current_user
 from app.database import issues_collection, users_collection
 from app.schemas.issue import IssueCreate
 from app.utils.ai_validator import validate_issue_content
-
-
 
 from app.utils.constants import (
     ISSUE_VERIFY_COUNT,
@@ -15,13 +14,11 @@ from app.utils.constants import (
     VALIDATOR_REWARD
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/issues", tags=["Issues"])
 
-DUPLICATE_RADIUS_METERS = 100  # meters
-
-
-
-
+DUPLICATE_RADIUS_METERS = 100
 
 
 # ----------------------------
@@ -45,7 +42,6 @@ def create_issue(
             }
         }
     })
-
 
     if existing_issue:
         raise HTTPException(
@@ -72,26 +68,22 @@ def create_issue(
         "user_id": current_user["user_id"],
         "validations": 0,
         "validated_by": [],
-        "created_at": datetime.utcnow()
+        "rating": issue.rating,
+        "created_at": datetime.now(timezone.utc)
     })
-
 
     return {"message": "Issue reported successfully"}
 
 
-
-
-
-
 # ----------------------------
-# Get All Issues
+# Get All Issues (with optional pagination)
 # ----------------------------
 @router.get("/")
-def get_all_issues():
+def get_all_issues(skip: int = 0, limit: int = 200):
     issues = list(
         issues_collection.find(
             {"status": {"$in": ["Active", "Verified"]}}
-        )
+        ).skip(skip).limit(limit)
     )
 
     for issue in issues:
@@ -101,7 +93,7 @@ def get_all_issues():
 
 
 # ----------------------------
-# Get Nearby Issues (THIS ONE)
+# Get Nearby Issues
 # ----------------------------
 @router.get("/nearby")
 def nearby_issues(lat: float, lng: float, radius: int = 500):
@@ -123,14 +115,14 @@ def nearby_issues(lat: float, lng: float, radius: int = 500):
     )
 
     for issue in issues:
-        issue["_id"] = str(issue["_id"])  # ✅ REQUIRED
+        issue["_id"] = str(issue["_id"])
 
     return issues
 
 
 # ----------------------------
-# Secure Test Endpoint  
-
+# Secure Test Endpoint
+# ----------------------------
 @router.get("/secure-test")
 def secure_test(current_user: dict = Depends(get_current_user)):
     return {
@@ -139,14 +131,9 @@ def secure_test(current_user: dict = Depends(get_current_user)):
     }
 
 
-
-
-
-
-
 # ----------------------------
-#ISSUE VALIDATION ENDPOINT
-# ----------------------------  
+# Issue Validation Endpoint
+# ----------------------------
 @router.post("/{issue_id}/validate")
 def validate_issue(
     issue_id: str,
@@ -196,14 +183,8 @@ def validate_issue(
     return {"message": "Issue validated successfully"}
 
 
-
-
-
-
-
-
 # ----------------------------
-# ISSUE RESOLUTION ENDPOINT
+# Issue Resolution Endpoint
 # ----------------------------
 @router.post("/{issue_id}/resolve")
 def resolve_issue(
@@ -215,7 +196,6 @@ def resolve_issue(
     if not issue:
         raise HTTPException(404, "Issue not found")
 
-    # ❌ Only verified issues can be resolved
     if issue["status"] != "Verified":
         raise HTTPException(
             400,
@@ -225,7 +205,6 @@ def resolve_issue(
     user_id = current_user["user_id"]
     user_role = current_user.get("role")
 
-    # ❌ Only admin or reporter
     if user_role != "admin" and issue["user_id"] != user_id:
         raise HTTPException(
             403,
@@ -237,15 +216,18 @@ def resolve_issue(
         {
             "$set": {
                 "status": "Resolved",
-                "resolved_at": datetime.utcnow(),
+                "resolved_at": datetime.now(timezone.utc),
                 "resolved_by": user_id
             }
         }
     )
 
     return {"message": "Issue marked as resolved"}
-# ----------------------------  
-# Nearby Issues
+
+
+# ----------------------------
+# Nearby Issue Alerts
+# ----------------------------
 @router.get("/alerts/nearby")
 def nearby_alerts(
     lat: float,
@@ -280,4 +262,3 @@ def nearby_alerts(
         "count": len(alerts),
         "alerts": alerts
     }
-# ----------------------------

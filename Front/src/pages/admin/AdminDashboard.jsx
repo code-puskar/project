@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
-import DeckGL from "@deck.gl/react";
-import { ScatterplotLayer } from "@deck.gl/layers";
-import Map from "react-map-gl/mapbox";
-import mapboxgl from "mapbox-gl";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
-    const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -31,6 +26,17 @@ export default function AdminDashboard() {
         { title: "Total Users", value: stats.total_users, color: "text-gray-300", bg: "bg-gray-500/10", border: "border-gray-500/20" },
     ];
 
+    // Issue type breakdown for bar chart
+    const issueTypeData = stats.issue_types || {};
+    const maxTypeCount = Math.max(...Object.values(issueTypeData), 1);
+    const typeColors = {
+        Pothole: { bar: "bg-red-500", text: "text-red-400" },
+        Garbage: { bar: "bg-orange-500", text: "text-orange-400" },
+        Streetlight: { bar: "bg-yellow-500", text: "text-yellow-400" },
+        Water: { bar: "bg-blue-500", text: "text-blue-400" },
+        Other: { bar: "bg-gray-500", text: "text-gray-400" },
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
             <div className="flex justify-between items-end">
@@ -51,18 +57,37 @@ export default function AdminDashboard() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[400px]">
-                {/* Placeholder for Line Chart */}
-                <div className="col-span-1 lg:col-span-2 bg-dark-800/50 border border-white/5 rounded-3xl p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
-                    {/* Decorative neon blur */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-brand-500/20 rounded-full blur-[80px]"></div>
-                    <span className="text-brand-400 text-4xl mb-4">📈</span>
-                    <h3 className="text-xl font-bold text-white mb-2">Analytics Chart</h3>
-                    <p className="text-gray-400 text-sm max-w-sm">Detailed timeseries activity charts will populate here as more historical reporting data completes.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Issue Type Breakdown Chart */}
+                <div className="col-span-1 lg:col-span-2 bg-dark-800/50 border border-white/5 rounded-3xl p-6">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-brand-500"></span> Issue Type Breakdown
+                    </h3>
+                    <div className="space-y-4">
+                        {Object.entries(issueTypeData).map(([type, count]) => (
+                            <div key={type} className="flex items-center gap-4">
+                                <span className={`text-sm font-medium w-24 ${typeColors[type]?.text || 'text-gray-400'}`}>{type}</span>
+                                <div className="flex-1 h-8 bg-dark-900 rounded-lg overflow-hidden relative">
+                                    <div
+                                        className={`h-full rounded-lg transition-all duration-700 ${typeColors[type]?.bar || 'bg-gray-500'}`}
+                                        style={{ width: `${Math.max((count / maxTypeCount) * 100, 2)}%` }}
+                                    />
+                                </div>
+                                <span className="text-sm font-mono text-gray-300 w-10 text-right">{count}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {stats.banned_users > 0 && (
+                        <div className="mt-6 pt-4 border-t border-white/5 flex items-center gap-2">
+                            <span className="text-xs text-red-400 font-semibold px-2 py-1 bg-red-500/10 rounded-md">
+                                {stats.banned_users} banned user{stats.banned_users > 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Recent Issues List */}
-                <div className="bg-dark-800/50 border border-white/5 rounded-3xl p-6 flex flex-col h-full overflow-hidden">
+                <div className="bg-dark-800/50 border border-white/5 rounded-3xl p-6 flex flex-col max-h-[450px] overflow-hidden">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-brand-500"></span> Recent Issues
                     </h3>
@@ -71,7 +96,7 @@ export default function AdminDashboard() {
                             stats.recent_issues.map(issue => (
                                 <div key={issue._id} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                                     <div className="flex justify-between items-start mb-1">
-                                        <span className="font-semibold text-gray-200 text-sm">{issue.title || issue.issue_type}</span>
+                                        <span className="font-semibold text-gray-200 text-sm">{issue.issue_type}</span>
                                         <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${issue.status === 'Resolved' ? 'bg-green-500/20 text-green-400' :
                                                 issue.status === 'Verified' ? 'bg-brand-500/20 text-brand-400' : 'bg-purple-500/20 text-purple-400'
                                             }`}>
@@ -79,8 +104,11 @@ export default function AdminDashboard() {
                                         </span>
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                        {new Date(issue.created_at).toLocaleDateString()} • {issue.issue_type}
+                                        {issue.created_at ? new Date(issue.created_at).toLocaleDateString() : "Unknown"} • {issue.issue_type}
                                     </div>
+                                    {issue.description && (
+                                        <div className="text-xs text-gray-400 mt-1 truncate max-w-[250px]">{issue.description}</div>
+                                    )}
                                 </div>
                             ))
                         }

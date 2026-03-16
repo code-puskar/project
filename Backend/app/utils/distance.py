@@ -1,7 +1,9 @@
 import math
 
+
 def calculate_distance(lat1, lon1, lat2, lon2):
-    R = 6371000  # meters
+    """Calculate distance between two coordinates in meters using Haversine formula."""
+    R = 6371000  # Earth radius in meters
 
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
@@ -18,3 +20,8 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
+
+
+def calculate_distance_km(lat1, lon1, lat2, lon2):
+    """Calculate distance between two coordinates in kilometers."""
+    return calculate_distance(lat1, lon1, lat2, lon2) / 1000

@@ -50,6 +50,7 @@ def get_current_user(
         "email": user["email"],
         "name": user.get("name", "Unknown"),
         "role": user.get("role", "user"),
-        "reputation": user.get("reputation", 0)
+        "reputation": user.get("reputation", 0),
+        "created_at": user.get("created_at"),
     }
 
