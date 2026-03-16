@@ -62,7 +62,7 @@ export default function Navbar({
   };
 
   return (
-    <header className="fixed top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 lg:left-1/2 lg:-translate-x-1/2 lg:w-[calc(100%-3rem)] lg:max-w-7xl z-50 transition-all duration-300">
+    <header className="fixed top-2 left-4 right-4 md:top-3 md:left-6 md:right-6 lg:left-1/2 lg:-translate-x-1/2 lg:w-[calc(100%-3rem)] lg:max-w-7xl z-50 transition-all duration-300">
       {/* Background shape: Pill on all devices */}
       <div className="absolute inset-0 bg-dark-900 shadow-xl border border-white/10 rounded-2xl md:bg-dark-900/80 md:backdrop-blur-md md:border md:border-white/10 md:shadow-lg md:rounded-2xl md:supports-[backdrop-filter]:bg-dark-900/60"></div>
 
