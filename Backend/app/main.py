@@ -12,7 +12,6 @@ app = FastAPI(
 )
 
 # Allow CORS for frontend development server
-# Adjust origins as needed for production
 allowed_origins = [
     "https://safexcity.vercel.app",
     "http://localhost:5173",
@@ -37,9 +36,10 @@ app.add_middleware(
 def health_check():
     return {"status": "ok"}
 
-# Register routers (each registered exactly once with correct prefix)
+# Register routers — issues, admin, and issue_images already define
+# their own prefix inside APIRouter(), so no prefix here for those.
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(issues.router, prefix="/issues", tags=["Issues"])
-app.include_router(issue_images.router)
+app.include_router(issues.router)        # prefix="/issues" already in router
+app.include_router(issue_images.router)  # prefix="/issues" already in router
 app.include_router(users.router, prefix="/users", tags=["Users"])
-app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(admin.router)         # prefix="/admin" already in router
