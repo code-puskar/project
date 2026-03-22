@@ -36,7 +36,14 @@ export default function IssueModal({ location, onClose, onSubmit }) {
       onClose();
     } catch (err) {
       console.error("Submission error:", err);
-      const message = err.response?.data?.detail || "Failed to submit report. Please try again.";
+      let message = "Failed to submit report. Please try again.";
+      if (err.response?.data?.detail) {
+        if (typeof err.response.data.detail === "string") {
+          message = err.response.data.detail;
+        } else if (Array.isArray(err.response.data.detail)) {
+          message = err.response.data.detail.map(d => `${d.loc[d.loc.length-1]}: ${d.msg}`).join(", ");
+        }
+      }
       setError(message);
     } finally {
       setIsSubmitting(false);
