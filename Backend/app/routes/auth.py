@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from app.database import users_collection
+from app.utils.rate_limit import limiter
 from app.models.user import UserRegister, UserLogin
 from app.utils.security import hash_password, verify_password
 from app.utils.jwt import create_access_token
@@ -26,7 +27,8 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 
 
 @router.post("/register")
-def register(user: UserRegister):
+@limiter.limit("5/minute")
+def register(request: Request, user: UserRegister):
     if users_collection.find_one({"email": user.email}):
         raise HTTPException(400, "Email already exists")
 
@@ -48,7 +50,8 @@ def register(user: UserRegister):
 
 
 @router.post("/login")
-def login(user: UserLogin):
+@limiter.limit("10/minute")
+def login(request: Request, user: UserLogin):
     db_user = users_collection.find_one({"email": user.email})
 
     if not db_user:

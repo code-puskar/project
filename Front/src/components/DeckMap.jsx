@@ -19,6 +19,7 @@ export default function DeckMap({
   centerRequest,
   routePath = null,
   onUserInteract = () => { },
+  onBoundsChange = null,
 }) {
   const [viewState, setViewState] = useState({
     longitude: position ? position[1] : 0,
@@ -233,6 +234,21 @@ export default function DeckMap({
           setViewState(vs);
           if (interactionState?.isDragging || interactionState?.isPanning || interactionState?.isZooming) {
             onUserInteract();
+          }
+          if (typeof onBoundsChange === "function" && mapRef.current) {
+            try {
+              const bounds = mapRef.current.getMap().getBounds();
+              if (bounds) {
+                onBoundsChange({
+                  minLng: bounds.getWest(),
+                  minLat: bounds.getSouth(),
+                  maxLng: bounds.getEast(),
+                  maxLat: bounds.getNorth()
+                });
+              }
+            } catch (e) {
+              // Map might not be fully initialized yet
+            }
           }
         }}
         layers={layers}

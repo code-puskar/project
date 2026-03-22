@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from bson import ObjectId
 from datetime import datetime, timezone
 import logging
@@ -7,6 +7,7 @@ from app.dependencies.auth import get_current_user
 from app.database import issues_collection, users_collection
 from app.schemas.issue import IssueCreate
 from app.utils.ai_validator import validate_issue_content
+from app.utils.rate_limit import limiter
 
 from app.utils.constants import (
     ISSUE_VERIFY_COUNT,
@@ -25,7 +26,9 @@ DUPLICATE_RADIUS_METERS = 100
 # Create Issue
 # ----------------------------
 @router.post("/")
+@limiter.limit("5/hour")
 def create_issue(
+    request: Request,
     issue: IssueCreate,
     current_user: dict = Depends(get_current_user)
 ):
@@ -79,11 +82,29 @@ def create_issue(
 # Get All Issues (with optional pagination)
 # ----------------------------
 @router.get("/")
-def get_all_issues(skip: int = 0, limit: int = 200):
+def get_all_issues(
+    skip: int = 0, 
+    limit: int = 200,
+    min_lat: float = None,
+    max_lat: float = None,
+    min_lng: float = None,
+    max_lng: float = None
+):
+    query = {"status": {"$in": ["Active", "Verified"]}}
+    
+    # Optional DB-level geospatial bounding box filter
+    if None not in (min_lat, max_lat, min_lng, max_lng):
+        query["location"] = {
+            "$geoWithin": {
+                "$box": [
+                    [min_lng, min_lat],
+                    [max_lng, max_lat]
+                ]
+            }
+        }
+
     issues = list(
-        issues_collection.find(
-            {"status": {"$in": ["Active", "Verified"]}}
-        ).skip(skip).limit(limit)
+        issues_collection.find(query).skip(skip).limit(limit)
     )
 
     for issue in issues:

@@ -37,6 +37,7 @@ export default function MapView({
   const alertedIssuesRef = useRef(new Set());
   const [notifications, setNotifications] = useState([]);
   const [isLoadingIssues, setIsLoadingIssues] = useState(false);
+  const [mapBounds, setMapBounds] = useState(null);
   const [followUser, setFollowUser] = useState(true);
   const [geoError, setGeoError] = useState(null);
   const hasCenteredRef = useRef(false);
@@ -90,18 +91,22 @@ export default function MapView({
     };
   }, []);
 
-  // Also load full issue list once on mount to avoid nearby-only gaps
+  // Fetch issues when map bounds change (debounced) and poll periodically
   useEffect(() => {
-    fetchAllIssues();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchAllIssues();
+    }, 300); // Debounce map panning
 
-  useEffect(() => {
     // Poll issues periodically to keep in sync across accounts
-    const id = setInterval(() => {
+    const pollId = setInterval(() => {
       fetchAllIssues();
     }, 30000);
-    return () => clearInterval(id);
-  }, []);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(pollId);
+    };
+  }, [mapBounds]);
 
   // Auto-fetch route when both locations are set
   useEffect(() => {
@@ -163,7 +168,11 @@ export default function MapView({
   const fetchAllIssues = async () => {
     try {
       setIsLoadingIssues(true);
-      const res = await api.get(`/issues/`);
+      let url = `/issues/`;
+      if (mapBounds) {
+        url += `?min_lng=${mapBounds.minLng}&min_lat=${mapBounds.minLat}&max_lng=${mapBounds.maxLng}&max_lat=${mapBounds.maxLat}`;
+      }
+      const res = await api.get(url);
       setIssues(res.data || []);
       alertedIssuesRef.current = new Set();
     } catch (err) {
@@ -340,6 +349,7 @@ export default function MapView({
           centerRequest={centerRequest}
           routePath={routePath}
           onUserInteract={() => setFollowUser(false)}
+          onBoundsChange={(bounds) => setMapBounds(bounds)}
           onMapClick={(latlng) => {
             if (position) {
               const dist = getDistanceInMeters(position[0], position[1], latlng.lat, latlng.lng);
