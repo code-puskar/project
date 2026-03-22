@@ -78,6 +78,7 @@ export default function MapView({
       (err) => {
         console.warn("Geolocation warning:", err.message);
         setGeoError(err.message || "Location unavailable");
+        addNotification("⚠️ Please turn on location services for the best experience.");
         // Fallback to New Delhi if no position exists yet
         if (!position) {
           setPosition([28.6139, 77.2090]);
