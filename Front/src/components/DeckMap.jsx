@@ -262,36 +262,37 @@ export default function DeckMap({
                 try {
                   const map = mapRef.current.getMap();
 
-                  // Use a 20x20 pixel bounding box around the click to be forgiving (especially for mobile/fat-fingers)
-                  const bbox = [
-                    [info.x - 10, info.y - 10],
-                    [info.x + 10, info.y + 10]
+                  // Tight bbox (6x6px) — only detect what's directly under the click
+                  const tightBbox = [
+                    [info.x - 3, info.y - 3],
+                    [info.x + 3, info.y + 3]
                   ];
-                  const features = map.queryRenderedFeatures(bbox);
+                  const features = map.queryRenderedFeatures(tightBbox);
 
-                  const roadKeywords = ['road', 'street', 'bridge', 'tunnel', 'motorway', 'highway', 'path', 'pedestrian', 'transit', 'crosswalk'];
+                  const roadKeywords = ['road', 'street', 'bridge', 'tunnel', 'motorway', 'highway', 'pedestrian', 'transit', 'crosswalk', 'link', 'trunk', 'primary', 'secondary', 'tertiary', 'service', 'track'];
+                  const nonRoadKeywords = ['building', 'water', 'waterway', 'structure', 'poi', 'park', 'landuse', 'landcover', 'land', 'natural', 'vegetation', 'forest', 'grass', 'hillshade', 'national', 'residential', 'commercial', 'industrial', 'aeroway'];
 
-                  // Check if any feature belongs to a road layer
-                  isRoad = features.some(f => {
+                  // Check if click is on a non-road feature (building, park, water, etc.)
+                  const isNonRoad = features.some(f => {
                     const layerId = f.layer?.id?.toLowerCase() || "";
                     const sourceLayer = f.sourceLayer?.toLowerCase() || "";
-                    return roadKeywords.some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
+                    const type = f.layer?.type?.toLowerCase() || "";
+                    // fill-extrusion layers are always 3D buildings
+                    if (type === 'fill-extrusion') return true;
+                    return nonRoadKeywords.some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
                   });
 
-                  // Fix for Mapbox Standard style: traditional road layers are obfuscated by the 3D pipeline.
-                  // For the 'standard' style, we switch to a blacklist approach: allow marking anywhere 
-                  // *except* explicitly on buildings, water bodies, or major POIs.
-                  if (mapStyleId === 'standard') {
-                    const isBuildingOrWater = features.some(f => {
+                  // Only consider it a road if NO non-road feature is blocking it
+                  if (!isNonRoad) {
+                    isRoad = features.some(f => {
                       const layerId = f.layer?.id?.toLowerCase() || "";
                       const sourceLayer = f.sourceLayer?.toLowerCase() || "";
-                      return ['water', 'building', 'structure', 'poi'].some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
+                      return roadKeywords.some(kw => layerId.includes(kw) || sourceLayer.includes(kw));
                     });
-                    isRoad = !isBuildingOrWater;
                   }
                 } catch (err) {
                   console.error("Failed to query rendered features:", err);
-                  isRoad = true; // Fallback to true if we can't determine
+                  isRoad = false; // Fail-safe: don't allow if we can't determine
                 }
               }
 
