@@ -2,7 +2,7 @@ import api from "../services/api";
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
-function Login({ onSuccess, onSwitchToRegister }) {
+function Login({ onSuccess, onSwitchToRegister, onClose }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
