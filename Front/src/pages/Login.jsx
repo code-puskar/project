@@ -2,7 +2,7 @@ import api from "../services/api";
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
-function Login({ onSuccess, onSwitchToRegister, onClose }) {
+function Login({ onSuccess, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,21 +78,6 @@ function Login({ onSuccess, onSwitchToRegister, onClose }) {
           style={{ transform: "translateZ(20px)" }}
         >
 
-          {/* Close Button */}
-          {onClose && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-              onClick={onClose}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:rotate-90 hover:scale-110"
-              title="Close"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </motion.button>
-          )}
 
           {/* Left Side: Title & Subtitle */}
           <div className="w-full md:w-1/2 flex flex-col justify-center text-center md:text-left">
