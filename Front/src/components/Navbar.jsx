@@ -4,6 +4,7 @@ import api from "../services/api";
 export default function Navbar({
   onSearchLocation,
   onIssueFilter,
+  issueFilter = "",
   mapStyleId,
   onStyleChange,
   show3D,
@@ -192,6 +193,23 @@ export default function Navbar({
               </div>
 
               <div className="p-2 space-y-1">
+                <div className="md:hidden px-3 py-2 mx-2">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+                    Issue filter
+                  </label>
+                  <select
+                    value={issueFilter}
+                    onChange={(e) => onIssueFilter(e.target.value)}
+                    className="w-full rounded-lg bg-dark-800 border border-white/10 text-sm text-gray-200 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  >
+                    <option value="">All issues</option>
+                    <option value="Pothole">Streets / Pothole</option>
+                    <option value="Garbage">Sanitation</option>
+                    <option value="Streetlight">Lighting</option>
+                    <option value="Traffic">Traffic</option>
+                  </select>
+                </div>
+
                 <div className="px-3 py-2 rounded-lg bg-white/5 mx-2 my-1">
                   <div className="flex justify-between items-center text-sm text-gray-300">
                     <span>Reputation</span>

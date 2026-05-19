@@ -201,10 +201,11 @@ export default function MapView({
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   };
 
-  // Nearby issue alerts
+  // Nearby issue alerts (batched so the toast queue is not flooded on load)
   useEffect(() => {
     if (!position?.length || !issues?.length) return;
     const [latitude, longitude] = position;
+    const newlyNearby = [];
 
     issues.forEach((issue) => {
       if (!issue.location?.coordinates) return;
@@ -212,9 +213,16 @@ export default function MapView({
       const distance = getDistanceInMeters(latitude, longitude, lat, lng);
       if (distance <= 200 && !alertedIssuesRef.current.has(issue._id)) {
         alertedIssuesRef.current.add(issue._id);
-        addNotification(`⚠️ Nearby Issue: ${issue.issue_type} — ${Math.round(distance)}m away`);
+        newlyNearby.push({ type: issue.issue_type, distance: Math.round(distance) });
       }
     });
+
+    if (newlyNearby.length === 1) {
+      const n = newlyNearby[0];
+      addNotification(`⚠️ Nearby Issue: ${n.type} — ${n.distance}m away`);
+    } else if (newlyNearby.length > 1) {
+      addNotification(`⚠️ ${newlyNearby.length} nearby issues detected`);
+    }
   }, [position, issues]);
 
   const fetchSuggestions = async (query, setter) => {
@@ -293,7 +301,7 @@ export default function MapView({
         active={activeNotification}
         onExitComplete={handleExitComplete}
       />
-      <div className="absolute inset-0 z-40">
+      <div className="absolute inset-0 z-40 touch-pan-x touch-pan-y overscroll-none">
         <DeckMap
           position={position}
           issues={showIssues ? issues : []}
@@ -338,7 +346,7 @@ export default function MapView({
       </div>
 
       {/* 🧭 Vertical Right Control Stack */}
-      <div className="absolute bottom-[100px] md:bottom-8 right-4 md:left-4 md:right-auto z-[45] flex flex-col md:flex-row items-center gap-3 w-12 md:w-auto">
+      <div className="absolute bottom-6 right-4 pb-[env(safe-area-inset-bottom)] md:bottom-8 md:left-4 md:right-auto z-[45] flex flex-col md:flex-row items-center gap-3 w-12 md:w-auto">
         {/* Map Style / Directions Toggle */}
         <button
           onClick={() => setRouteOpen((v) => !v)}
@@ -381,42 +389,8 @@ export default function MapView({
         </button>
       </div>
 
-      {/* ⚪ Mobile Bottom Sheet (Filters) */}
-      <div className="absolute md:hidden bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[32px] pt-3 pb-8 md:pb-6 px-2 flex flex-col z-[48] transition-transform duration-300">
-        {/* Grab Handle */}
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-
-        {/* Horizontal scroll area for issue filters */}
-        <div className="overflow-x-auto no-scrollbar pb-2">
-          <div className="flex gap-2 px-2 min-w-max">
-            {[
-              { label: "All Issues", value: "" },
-              { label: "Streets", value: "Pothole" },
-              { label: "Sanitation", value: "Garbage" },
-              { label: "Lighting", value: "Streetlight" },
-              { label: "Traffic", value: "Traffic" }
-            ].map((filter) => (
-              <button
-                key={filter.label}
-                onClick={() => {
-                  if (typeof setIssueFilter === "function") {
-                    setIssueFilter(filter.value);
-                  }
-                }}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${(issueFilter === filter.value || (issueFilter === "" && filter.value === ""))
-                  ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
-                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                  }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {geoError && (
-        <div className="absolute bottom-24 left-4 z-50 bg-red-600/90 backdrop-blur text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-red-500/50">
+        <div className="absolute bottom-6 left-4 z-50 max-w-[calc(100%-6rem)] pb-[env(safe-area-inset-bottom)] bg-red-600/90 backdrop-blur text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-red-500/50">
           {geoError}
         </div>
       )}

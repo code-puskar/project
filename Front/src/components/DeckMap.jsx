@@ -167,13 +167,15 @@ export default function DeckMap({
           }
         }
       },
-      onHover: (info) => {
-        if (info && info.object) {
-          setTooltip({ x: info.x, y: info.y, object: info.object });
-        } else {
-          setTooltip(null);
-        }
-      },
+      onHover: isMobile
+        ? undefined
+        : (info) => {
+            if (info && info.object) {
+              setTooltip({ x: info.x, y: info.y, object: info.object });
+            } else {
+              setTooltip(null);
+            }
+          },
     }),
   ];
 
@@ -216,17 +218,31 @@ export default function DeckMap({
   }
 
 
+  const mapController = isMobile
+    ? {
+        scrollZoom: true,
+        dragPan: true,
+        dragRotate: false,
+        touchRotate: false,
+        touchZoom: true,
+        doubleClickZoom: true,
+        inertia: 300,
+        touchAction: "pan-x pan-y",
+      }
+    : {
+        scrollZoom: true,
+        dragRotate: true,
+        touchRotate: true,
+        doubleClickZoom: true,
+        dragPan: true,
+        touchZoom: true,
+        inertia: 200,
+      };
+
   return (
-    <div className="absolute inset-0 z-40">
+    <div className="absolute inset-0 z-40 [&_.mapboxgl-canvas]:touch-manipulation">
       <DeckGL
-        controller={{
-          scrollZoom: true,
-          dragRotate: true,
-          touchRotate: true,
-          doubleClickZoom: true,
-          dragPan: true,
-          touchZoom: true,
-        }}
+        controller={mapController}
         viewState={viewState}
         onViewStateChange={({ viewState: vs, interactionState }) => {
           setViewState(vs);
@@ -349,8 +365,12 @@ export default function DeckMap({
               />
             </>
           )}
-          <NavigationControl position="top-right" />
-          <GeolocateControl position="top-right" showAccuracyCircle trackUserLocation />
+          {!isMobile && (
+            <>
+              <NavigationControl position="top-right" />
+              <GeolocateControl position="top-right" showAccuracyCircle trackUserLocation />
+            </>
+          )}
           <ScaleControl position="bottom-left" />
         </Map>
 

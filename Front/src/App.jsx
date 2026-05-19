@@ -71,6 +71,7 @@ function MainApp({
       <Navbar
         onSearchLocation={setSearchLocation}
         onIssueFilter={setIssueFilter}
+        issueFilter={issueFilter}
         mapStyleId={mapStyleId}
         onStyleChange={setMapStyleId}
         show3D={show3D}
