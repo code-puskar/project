@@ -56,7 +56,11 @@ export default function Register({ onClose, onSwitchToLogin }) {
             onSwitchToLogin();
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.detail || "Registration failed");
+            setError(
+                err.response?.data?.detail ||
+                err.message ||
+                "Registration failed"
+            );
         } finally {
             setLoading(false);
         }

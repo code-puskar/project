@@ -6,6 +6,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Motion values for 3D tilt effect
   const x = useMotionValue(0);
@@ -42,6 +43,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
 
     try {
       setLoading(true);
+      setError(null);
 
       const res = await api.post("/auth/login", {
         email,
@@ -50,7 +52,22 @@ function Login({ onSuccess, onSwitchToRegister }) {
 
       onSuccess(res.data.access_token);
     } catch (err) {
-      alert("Invalid credentials");
+      const detail = err.response?.data?.detail;
+      if (err.response?.status === 401) {
+        setError(typeof detail === "string" ? detail : "Invalid email or password");
+      } else if (err.response?.status === 403) {
+        setError(typeof detail === "string" ? detail : "Your account has been banned");
+      } else if (err.code === "ERR_NETWORK" || !err.response) {
+        setError("Cannot reach the server. Check that the backend is running and VITE_API_URL in .env.");
+      } else {
+        setError(
+          typeof detail === "string"
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((d) => d.msg).join(", ")
+              : "Sign in failed. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -130,8 +147,17 @@ function Login({ onSuccess, onSwitchToRegister }) {
 
           {/* Right Side: Inputs & Actions */}
           <div className="w-full md:w-1/2 flex flex-col justify-center">
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center"
+              >
+                {error}
+              </motion.div>
+            )}
             {/* Inputs */}
-            <div className="space-y-4 mb-6">
+            <motion.div className="space-y-4 mb-6">
               <motion.div
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -171,7 +197,7 @@ function Login({ onSuccess, onSwitchToRegister }) {
                   className="block w-full pl-11 pr-10 py-3.5 bg-dark-800/50 border border-white/10 focus:border-brand-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
                 />
               </motion.div>
-            </div>
+            </motion.div>
 
             <motion.button
               whileHover={{ scale: 1.02 }}

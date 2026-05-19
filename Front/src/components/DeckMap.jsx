@@ -15,7 +15,6 @@ export default function DeckMap({
   show3D = false,
   searchLocation,
   issueFilter,
-  currentUserId,
   centerRequest,
   routePath = null,
   onUserInteract = () => { },
@@ -31,7 +30,6 @@ export default function DeckMap({
 
   const initialFlyRef = useRef(false);
   const [tooltip, setTooltip] = useState(null);
-  const [selectedInfo, setSelectedInfo] = useState(null);
   const mapRef = useRef(null);
 
   // Detect Mobile
@@ -246,7 +244,7 @@ export default function DeckMap({
                   maxLat: bounds.getNorth()
                 });
               }
-            } catch (e) {
+            } catch {
               // Map might not be fully initialized yet
             }
           }

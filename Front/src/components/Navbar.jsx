@@ -15,6 +15,14 @@ export default function Navbar({
   const dropdownRef = useRef(null);
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
 
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/users/me");
+      setUser(res.data);
+    } catch (err) {
+      console.error("Failed to fetch profile", err);
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -28,15 +36,6 @@ export default function Navbar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await api.get("/users/me");
-      setUser(res.data);
-    } catch (err) {
-      console.error("Failed to fetch profile", err);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");

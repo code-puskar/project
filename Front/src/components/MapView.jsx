@@ -1,4 +1,5 @@
 import DeckMap from "./DeckMap";
+import MapNotificationToast, { useMapNotifications } from "./MapNotificationToast";
 import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 
@@ -11,14 +12,12 @@ export default function MapView({
   issueFilter,
   setIssueFilter,
   mapStyleId,
-  onStyleChange,
   show3D,
-  onToggle3D,
   onIssueSelect,
 }) {
   const [position, setPosition] = useState(null);
   const watchIdRef = useRef(null);
-  const [showIssues, setShowIssues] = useState(true);
+  const [showIssues] = useState(true);
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
   const [centerRequest, setCenterRequest] = useState(null);
 
@@ -35,7 +34,8 @@ export default function MapView({
 
 
   const alertedIssuesRef = useRef(new Set());
-  const [notifications, setNotifications] = useState([]);
+  const { active: activeNotification, addNotification, handleExitComplete } =
+    useMapNotifications();
   const [isLoadingIssues, setIsLoadingIssues] = useState(false);
   const [mapBounds, setMapBounds] = useState(null);
   const [followUser, setFollowUser] = useState(true);
@@ -44,7 +44,6 @@ export default function MapView({
 
 
   const token = localStorage.getItem("access_token");
-  const user = JSON.parse(localStorage.getItem("user"));
 
 
   // Geolocation and initial issues fetch
@@ -180,7 +179,6 @@ export default function MapView({
       }
       const res = await api.get(url);
       setIssues(res.data || []);
-      alertedIssuesRef.current = new Set();
     } catch (err) {
       console.error("Failed to fetch issues", err);
       addNotification("Could not refresh issues");
@@ -203,14 +201,6 @@ export default function MapView({
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   };
 
-  const addNotification = (message) => {
-    const id = Date.now() + Math.random();
-    setNotifications((prev) => [...prev, { id, message }]);
-    setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, 5000);
-  };
-
   // Nearby issue alerts
   useEffect(() => {
     if (!position?.length || !issues?.length) return;
@@ -226,17 +216,6 @@ export default function MapView({
       }
     });
   }, [position, issues]);
-
-  // Geocoding helpers
-  const geocode = async (query) => {
-    if (!query) return null;
-    let url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=1&country=in`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.features || !data.features.length) return null;
-    const [lng, lat] = data.features[0].center;
-    return { lat, lng, label: data.features[0].place_name };
-  };
 
   const fetchSuggestions = async (query, setter) => {
     if (!query || query.length < 3) {
@@ -287,7 +266,7 @@ export default function MapView({
         return data.features[0].place_name;
       }
       return "Current Location";
-    } catch (e) {
+    } catch {
       return "Current Location";
     }
   };
@@ -306,42 +285,14 @@ export default function MapView({
     };
   };
 
-  const handleValidate = async (issueId) => {
-    if (!token) {
-      if (typeof onRequireLogin === "function") onRequireLogin();
-      return;
-    }
-    try {
-      await api.post(
-        `/issues/${issueId}/validate`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchAllIssues();
-    } catch (err) {
-      alert(err.response?.data?.detail || "Validation failed");
-    }
-  };
-
   if (!position) return <p>Locating you...</p>;
 
   return (
     <div className="relative z-0 h-screen w-full overflow-hidden bg-gray-100">
-      {notifications.length > 0 && (
-        <div className="fixed top-20 left-4 right-4 md:left-auto md:right-4 z-50 flex flex-col gap-2 pointer-events-none">
-          {notifications.map((n) => (
-            <div key={n.id} className="bg-[#FFF9E6] border border-[#FFE499] text-[#805B00] px-4 py-3 rounded-2xl shadow-lg shadow-yellow-500/10 flex items-center gap-3 backdrop-blur-md font-medium text-sm animate-in slide-in-from-top-4 fade-in duration-300 pointer-events-auto">
-              <div className="bg-[#FFEDAE] p-1.5 rounded-lg text-[#996D00]">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              {n.message}
-            </div>
-          ))}
-        </div>
-      )}
-
+      <MapNotificationToast
+        active={activeNotification}
+        onExitComplete={handleExitComplete}
+      />
       <div className="absolute inset-0 z-40">
         <DeckMap
           position={position}
@@ -351,7 +302,6 @@ export default function MapView({
           show3D={show3D}
           searchLocation={searchLocation}
           issueFilter={issueFilter}
-          currentUserId={user?.id}
           centerRequest={centerRequest}
           routePath={routePath}
           onUserInteract={() => setFollowUser(false)}

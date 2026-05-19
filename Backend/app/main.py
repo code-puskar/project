@@ -19,31 +19,39 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
 
 @app.on_event("startup")
 def startup_event():
     setup_database()
 
-# Allow CORS for frontend development server
+# Production + common dev origins; regex covers Vite ports and IPv6 localhost
 allowed_origins = [
     "https://safexcity.vercel.app",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
+    "http://[::1]:5173",
+    "http://[::1]:5174",
+    "http://[::1]:5175",
 ]
 
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     allowed_origins.append(frontend_url.rstrip("/"))
 
+# CORS must be outermost so OPTIONS preflight is answered before rate limiting
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SlowAPIMiddleware)
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

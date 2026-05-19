@@ -1,45 +1,118 @@
-# Backend and Frontend Deployment Guide
+# SafeXCity Deployment Guide
 
-This guide covers deploying your FastAPI Backend and React (Vite) Frontend. 
+This guide explains how to deploy the FastAPI backend and Vite React frontend.
 
-## 1. Backend Deployment (Render or Railway)
+## 1. Backend Deployment
 
-Since your backend uses Python (FastAPI) and MongoDB Atlas, setting it up on Render or Railway is the easiest approach.
+Recommended platforms:
 
-**Deploying on Render:**
-1. Create an account on [Render](https://render.com/).
-2. Click **New +** and select **Web Service**.
-3. Connect your GitHub repository containing this code.
-4. Render might ask you for a root directory. If your backend is inside `Backend/`, set the **Root Directory** to `Backend/`.
-5. **Environment**: Select `Python 3`.
-6. **Build Command**: `pip install -r requirements.txt` *(Make sure to run `pip freeze > requirements.txt` inside your Backend folder if you haven't already!)*
-7. **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-8. **Environment Variables**: Click "Advanced" and add the following variables:
-   - `MONGO_URL`: Your MongoDB connected string (e.g. `mongodb+srv://...`)
-   - `JWT_SECRET`: A very long, random string for signing JWT tokens.
-   - `FRONTEND_URL`: The URL of your deployed frontend (e.g., `https://my-smart-city.vercel.app`) to allow CORS.
-9. Click **Create Web Service**. Wait a few minutes for the build to finish. Your API will be live at `https://your-app-name.onrender.com`.
+- Render
+- Railway
+- Any VPS/container host that supports Python
 
-## 2. Frontend Deployment (Vercel or Netlify)
+### Render Setup
 
-Vercel is generally the best tool for deploying Vite React applications.
+1. Create a Render account.
+2. Create a new Web Service.
+3. Connect the GitHub repository.
+4. Set Root Directory to `Backend`.
+5. Set Environment to Python 3.
+6. Build command:
 
-**Deploying on Vercel:**
-1. Create an account on [Vercel](https://vercel.com/) and connect your GitHub.
-2. Click **Add New -> Project** and import your repository.
-3. Keep the **Root Directory** as `Front`.
-4. The Build & Development Settings will automatically default to Vite.
-   - **Framework Preset:** Vite
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-5. **Environment Variables**: Add your frontend API keys here.
-   - `VITE_MAPBOX_TOKEN`: Your Mapbox Token
-   - `VITE_CESIUM_ION_TOKEN`: Your Cesium Ion Token
-6. **Update API URL**: Currently, your frontend probably calls `http://localhost:8000`. You will need to change this inside your `src/services/api.js` (or wherever you make Axios/Fetch calls) to point to your new backend URL from Render (e.g. `https://your-app-name.onrender.com`).
-   - *Tip: You can use a `.env` variable for this on your frontend, like `VITE_API_BASE_URL`!*
-7. Click **Deploy**. Vercel will build and launch your frontend.
+```bash
+pip install -r requirements.txt
+```
 
-### Final Checklist ✅
-1. **Backend**: Deployed, running on Render, with valid `MONGO_URL`, `JWT_SECRET` and `FRONTEND_URL` environment variables set.
-2. **Frontend**: Deployed on Vercel, Mapbox/Cesium tokens added, and API endpoints updated to hit your new Render URL instead of `localhost:8000`.
-3. **CORS**: Backend is configured to accept requests from your Vercel URL.
+7. Start command:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+8. Add environment variables:
+
+```env
+MONGO_URL=mongodb+srv://...
+JWT_SECRET=replace_with_a_long_random_secret
+OPENROUTER_API_KEY=optional_openrouter_key
+FRONTEND_URL=https://your-frontend-domain.vercel.app
+```
+
+9. Deploy and test:
+
+```text
+https://your-backend-domain.onrender.com/health
+https://your-backend-domain.onrender.com/docs
+```
+
+## 2. Frontend Deployment
+
+Recommended platforms:
+
+- Vercel
+- Netlify
+
+### Vercel Setup
+
+1. Create a Vercel account.
+2. Import the GitHub repository.
+3. Set Root Directory to `Front`.
+4. Use Vite defaults:
+   - Build command: `npm run build`
+   - Output directory: `dist`
+5. Add environment variables:
+
+```env
+VITE_API_URL=https://your-backend-domain.onrender.com
+VITE_MAPBOX_TOKEN=your_mapbox_token
+VITE_CESIUM_ION_TOKEN=optional_cesium_token
+```
+
+6. Deploy.
+
+## 3. CORS Checklist
+
+The backend allows:
+
+- `https://safexcity.vercel.app`
+- `http://localhost:5173`
+- `http://localhost:5174`
+- `http://localhost:5175`
+- The value of `FRONTEND_URL`, if set
+
+For production, set `FRONTEND_URL` to the deployed frontend URL.
+
+## 4. Database Checklist
+
+Use MongoDB Atlas for hosted deployment.
+
+Required indexes are created at backend startup:
+
+- Unique index on `users.email`
+- 2dsphere index on `issues.location.coordinates`
+
+## 5. Pre-Deployment Verification
+
+Run these locally before deployment:
+
+```bash
+cd Front
+npm run lint
+npm run build
+
+cd ..
+python -m compileall Backend\app
+```
+
+## 6. Production Hardening Checklist
+
+Before a real public launch:
+
+- Add automated backend tests.
+- Add frontend integration tests.
+- Add CI/CD checks for lint, build, and tests.
+- Store uploads in S3, Cloudinary, or another object store.
+- Add structured logs and error monitoring.
+- Configure deployment request-size limits.
+- Add a backup policy for MongoDB Atlas.
+- Remove generated cache files from version control.

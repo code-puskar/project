@@ -27,7 +27,7 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 
 
 @router.post("/register")
-@limiter.limit("5/minute")
+@limiter.limit("5/minute", methods=["POST"])
 def register(request: Request, user: UserRegister):
     if users_collection.find_one({"email": user.email}):
         raise HTTPException(400, "Email already exists")
@@ -50,7 +50,7 @@ def register(request: Request, user: UserRegister):
 
 
 @router.post("/login")
-@limiter.limit("10/minute")
+@limiter.limit("10/minute", methods=["POST"])
 def login(request: Request, user: UserLogin):
     db_user = users_collection.find_one({"email": user.email})
 

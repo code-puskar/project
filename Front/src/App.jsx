@@ -14,12 +14,12 @@ import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./pages/admin/AdminLayout";
 
 function MainApp({
-  showLanding, setShowLanding,
+  showLanding,
   showLogin, setShowLogin,
   showRegister, setShowRegister,
   showIssueModal, setShowIssueModal,
   selectedIssue, setSelectedIssue,
-  pendingLocation, setPendingLocation,
+  pendingLocation,
   issues, setIssues,
   searchLocation, setSearchLocation,
   issueFilter, setIssueFilter,
@@ -163,6 +163,20 @@ function AppWrapper() {
   const [pendingLocation, setPendingLocation] = useState(null);
   const [issues, setIssues] = useState([]);
 
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/users/me");
+      setUser(res.data);
+    } catch (e) {
+      console.error("Failed to fetch profile in App", e);
+      if (e.response && e.response.status === 401) {
+        localStorage.removeItem("access_token");
+        setToken(null);
+        setShowLanding(true);
+      }
+    }
+  };
+
   // 🔑 Auth hydration
   useEffect(() => {
     if (window.location.hash === "#dashboard") setShowLanding(false);
@@ -176,7 +190,7 @@ function AppWrapper() {
 
     if (storedToken) {
       setToken(storedToken);
-      fetchProfile(storedToken);
+      fetchProfile();
       setShowLogin(false);
       setShowLanding(false);
     }
@@ -184,20 +198,6 @@ function AppWrapper() {
     setAuthReady(true);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
-
-  const fetchProfile = async (t) => {
-    try {
-      const res = await api.get("/users/me");
-      setUser(res.data);
-    } catch (e) {
-      console.error("Failed to fetch profile in App", e);
-      if (e.response && e.response.status === 401) {
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setShowLanding(true);
-      }
-    }
-  };
 
   if (!authReady) return null;
 
@@ -215,7 +215,7 @@ function AppWrapper() {
   const handleLoginSuccess = (newToken) => {
     localStorage.setItem("access_token", newToken);
     setToken(newToken);
-    fetchProfile(newToken);
+    fetchProfile();
     setShowLogin(false);
     setShowLanding(false);
     if (pendingLocation) setShowIssueModal(true);
@@ -248,12 +248,12 @@ function AppWrapper() {
     <Routes>
       <Route path="/admin/*" element={<AdminLayout />} />
       <Route path="/*" element={<MainApp
-        showLanding={showLanding} setShowLanding={setShowLanding}
+        showLanding={showLanding}
         showLogin={showLogin} setShowLogin={setShowLogin}
         showRegister={showRegister} setShowRegister={setShowRegister}
         showIssueModal={showIssueModal} setShowIssueModal={setShowIssueModal}
         selectedIssue={selectedIssue} setSelectedIssue={setSelectedIssue}
-        pendingLocation={pendingLocation} setPendingLocation={setPendingLocation}
+        pendingLocation={pendingLocation}
         issues={issues} setIssues={setIssues}
         searchLocation={searchLocation} setSearchLocation={setSearchLocation}
         issueFilter={issueFilter} setIssueFilter={setIssueFilter}

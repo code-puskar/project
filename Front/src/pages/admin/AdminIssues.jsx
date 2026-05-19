@@ -44,7 +44,7 @@ export default function AdminIssues() {
         try {
             await api.delete(`/admin/issues/${id}`);
             fetchIssues();
-        } catch (err) {
+        } catch {
             alert("Failed to delete");
         }
     };

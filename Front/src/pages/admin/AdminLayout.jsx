@@ -25,7 +25,7 @@ export default function AdminLayout() {
                 } else {
                     setIsAdmin(true);
                 }
-            } catch (err) {
+            } catch {
                 navigate("/");
             } finally {
                 setLoading(false);

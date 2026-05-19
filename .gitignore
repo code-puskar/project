@@ -4,3 +4,17 @@
 !.env.example
 Backend/.env
 Front/.env
+
+# Frontend dependencies and build output
+Front/node_modules/
+Front/dist/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+Backend/venv/
+Backend/.venv/
+
+# Local uploads and runtime artifacts
+Backend/app/uploads/
+*.log

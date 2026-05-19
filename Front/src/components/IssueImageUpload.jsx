@@ -1,3 +1,6 @@
+import { useState } from "react";
+import api from "../services/api";
+
 export default function IssueImageUpload({ issueId }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
